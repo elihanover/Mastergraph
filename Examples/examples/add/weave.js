@@ -1,0 +1,2 @@
+import weave
+weave.deploy()

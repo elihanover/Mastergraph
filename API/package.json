@@ -1,6 +1,6 @@
 {
   "name": "weaveapi",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,10 @@
   "author": "weaveapi",
   "license": "ISC",
   "bin": {
-    "weave": "index.js"
+    "weave": "Deployment/deploy.js"
+  },
+  "dependencies": {
+    "commander": "^2.18.0",
+    "genesis-device": "^0.1.1"
   }
 }

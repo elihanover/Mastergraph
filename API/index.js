@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 console.log('testing 1 2 3')
-const Lambda = require('./Lambda.js')
+const Lambda = require('./Lambda/Lambda.js')
 console.log("lambda: " + JSON.stringify(Lambda, null, 4))
-const Database = require('./Database.js')
+const Database = require('./Database/Database.js')
 console.log("database: " + JSON.stringify(Database, null, 4))
 const deployLambda = require('./deploy.js')
 module.exports = {Lambda, Database, deployLambda}

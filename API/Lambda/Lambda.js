@@ -2,6 +2,7 @@ const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
 const genesis = new GenesisDevice();
 var fs = require('fs');
 
+
 /*
   Lambda(params, function)
   params =
@@ -10,49 +11,49 @@ class Lambda {
   // TODO: constructor must take in all the config arguments
   //       and infer other needed information
   constructor(params, func) {
+    console.log(__filename)
+    console.log(__dirname)
+
     // User defined
     this.function = func
+    this.name = params.name
     this.frequency = params.frequency
     this.http = params.http
 
-    this.name = params.name
-    // NOTE The eventual .tf config file will be in a config folder
-    // so our path will be relative to that
-    // TODO: There's gotta be a more elegant way of doing this
-    this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: INFER HANDLER
+    // NOTE The eventual .tf config file will be in a config folder so our path will be relative to that
+    this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: ELEGANCE
+    this.runtime = "nodejs6.10" // TODO: needs to be inferred
   }
 
   // Saves the terraform config for this lambda to a output file
-  terraform() {
-    // Add basic resource config
+  terraform(filename) {
+    console.log(filename)
+
+    // create role
+    const role_id = "iam_for_" + this.name
+    genesis.addResource('aws_iam_role', role_id, {
+      name: role_id,
+      assume_role_policy: "${data.aws_iam_policy_document.policy.json}"
+    })
+
+    // add lambda resource
     genesis.addResource('aws_lambda_function', this.name, {
       function_name: this.name,
 
-      // The bucket name as created earlier with "aws s3api create-bucket"
-      s3_bucket: "terraform-serverless-example",
-      s3_key:"v1.0.0/example.zip",
+      role: "${aws_iam_role." + role_id + ".arn}",
+      handler: filename.replace('.js', '') + "." + this.name,
+      runtime: this.runtime,
 
-      // "main" is the filename within the zip file (main.js) and "handler"
-      // is the name of the property under which the handler function was
-      // exported in that file.
-      handler: this.handler,
-      runtime: "nodejs6.10", // TODO: get runtime
-
-      role: "${aws_iam_role.lambda_exec.arn}"
+      filename: "${data.archive_file.zip.output_path}",
+      source_code_hash: "${data.archive_file.zip.output_sha}"
     })
 
-    // Build other resources we need
-    if (this.http !== null) {
-      // add api gateway resource and all that jazz
-      console.log(this.http)
-    }
-    if (this.frequency !== null) {
-      // add cron job resource
-      console.log(this.frequency)
-    }
-
-    console.log(genesis.toString())
-
+    // add zip
+    genesis.addData('archive_file', 'zip', {
+      type: "zip",
+      source_file: filename,
+      output_path: filename.replace('.js', '.zip')
+    })
 
     // write genesis.toString() to terraform config template
     // TODO: where to actually write this file to?

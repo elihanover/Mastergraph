@@ -1,9 +1,0 @@
-service: ${} # VAR
-provider: aws # VAR
-functions:
-  scheduledFunction:
-      handler: handler.scheduledFunction
-      events:
-        - schedule: ${file(../myCustomFile.js):promised}
-resources:
-  Resources: ${file(cloudformation-resources.json)}

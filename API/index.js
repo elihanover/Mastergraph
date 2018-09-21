@@ -4,7 +4,7 @@ const Lambda = require('./Lambda/Lambda.js')
 console.log("lambda: " + JSON.stringify(Lambda, null, 4))
 const Database = require('./Database/Database.js')
 console.log("database: " + JSON.stringify(Database, null, 4))
-const deployLambda = require('./deploy.js')
+const deployLambda = require('./Deployment/deploy.js')
 module.exports = {Lambda, Database, deployLambda}
 // var program = require('commander');
 //

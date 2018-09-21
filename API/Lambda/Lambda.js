@@ -29,6 +29,16 @@ class Lambda {
   terraform(filename) {
     console.log(filename)
 
+    // create file called this.name.js with the function in it
+    var function_body = this.function.toString().slice(0,8) + ' handler' + this.function.toString().slice(8) + 'exports.handler = handler'
+    fs.writeFile(this.name + '.js', function_body, (err) => {
+        // throws an error, you could also catch it here
+        if (err) throw err;
+
+        // success case, the file was saved
+        console.log(this.name + '.js updated.');
+    });
+
     // create role
     const role_id = "iam_for_" + this.name
     genesis.addResource('aws_iam_role', role_id, {
@@ -41,7 +51,7 @@ class Lambda {
       function_name: this.name,
 
       role: "${aws_iam_role." + role_id + ".arn}",
-      handler: filename.replace('.js', '') + "." + this.name,
+      handler: this.name + '.handler',
       runtime: this.runtime,
 
       filename: "${data.archive_file.zip.output_path}",
@@ -50,15 +60,39 @@ class Lambda {
 
     // add zip
     genesis.addData('archive_file', 'zip', {
-      type: "zip",
-      source_file: filename,
-      output_path: filename.replace('.js', '.zip')
+      type: 'zip',
+      source_file: this.name + '.js',
+      output_path: this.name + '.zip'
     })
 
+
+    if (this.frequency) {
+      // add cron frequency rule with specified frequency
+      genesis.addResource('aws_cloudwatch_event_rule', 'frequency', {
+        name: 'frequency_of_' + this.name,
+        schedule_expression: 'rate(' + this.frequency + ')'
+      })
+
+      //
+      genesis.addResource('aws_cloudwatch_event_target', this.name + '_frequency', {
+        rule: '${aws_cloudwatch_event_rule.frequency.name}',
+        target_id: this.name,
+        arn: '${aws_lambda_function.' + this.name + '.arn}'
+      })
+
+      // give cloudwatch permission to call function
+      genesis.addResource('aws_lambda_permission', 'allow_cloudwatch_to_call_' + this.name, {
+        statement_id: 'AllowExecutionFromCloudWatch',
+        action: 'lambda:InvokeFunction',
+        function_name: '${aws_lambda_function.' + this.name + '.function_name}',
+        principal: 'events.amazonaws.com',
+        source_arn: '${aws_cloudwatch_event_rule.frequency.arn}'
+      })
+    }
+
+
+
     // write genesis.toString() to terraform config template
-    // TODO: where to actually write this file to?
-    //        probably we want to create some config folder
-    //        and throw everything in there
     fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)

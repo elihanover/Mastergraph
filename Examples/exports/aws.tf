@@ -26,5 +26,10 @@ data "aws_iam_policy_document" "policy" {
 }
 
 
+resource "aws_api_gateway_rest_api" "api_gateway" {
+  name        = "AWS_API_Gateway"
+  description = "AWS API Gateway"
+}
+
 
 

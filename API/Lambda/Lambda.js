@@ -91,19 +91,6 @@ class Lambda {
     }
 
     if (this.http) {
-      // TODO: this should be in AWS.tf
-      // Don't want to create a new one for each lambda
-
-      // The "REST API" is the container for all of the other API Gateway objects
-      try {
-          genesis.addResource('aws_api_gateway_rest_api', 'api_gateway', {
-          name: "AWS_API_Gateway",
-          description: "AWS API Gateway"
-        })
-      } catch (error) {
-        console.log(error)
-      }
-
       // Gateway Resource
       genesis.addResource('aws_api_gateway_resource', this.name, {
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
@@ -140,7 +127,6 @@ class Lambda {
         stage_name: "hello"
       })
 
-
       // Give permission to call lambda
       genesis.addResource('aws_lambda_permission', this.name + '_apigw', {
         statement_id: "AllowAPIGatewayInvoke",
@@ -152,8 +138,6 @@ class Lambda {
         // within the API Gateway "REST API".
         source_arn: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.execution_arn}/*/*"
       })
-
-
     }
 
     if (this.logs) {
@@ -162,7 +146,8 @@ class Lambda {
 
     // write genesis.toString() to terraform config template
     // fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {
-    fs.writeFile("./functions.tf", genesis.toString(), function(err) {
+    // Name of file should be original file name
+    fs.writeFile("./ " + filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
         }

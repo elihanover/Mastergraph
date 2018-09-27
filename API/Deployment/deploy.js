@@ -65,6 +65,13 @@ function terraform_provider(provider) {
       }
     })
 
+    // The "REST API" is the container for all of the other API Gateway objects
+    // NOTE: ASSUME WE WANT ONE, HOW TO SPECIFY IF NOT
+    genesis.addResource('aws_api_gateway_rest_api', 'api_gateway', {
+      name: "AWS_API_Gateway",
+      description: "AWS API Gateway"
+    })
+
     // Write to provider.tf file
     fs.writeFile("./" + program.provider + ".tf", genesis.toString(), function(err) {
         if (err) {

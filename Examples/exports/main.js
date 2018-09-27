@@ -8,7 +8,11 @@ console.log("database: " + weave.Database)
 // test function
 var test = new weave.Lambda({
     name: "myprecious",
-    frequency: "1 minute",
+    // frequency: "1 minute",
+    http: {
+      method: 'get',
+      path: 'heythere'
+    }
   },
   function() {
     console.log("Test Passed")

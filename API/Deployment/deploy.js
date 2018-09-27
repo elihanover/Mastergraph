@@ -11,6 +11,7 @@ const genesis = new GenesisDevice();
 var fs = require('fs');
 var program = require('commander');
 exec = require('child_process').exec;
+spawn = require('child_process').spawn;
 // chalk = require("chalk") // for coloring output
 
 program
@@ -18,48 +19,58 @@ program
   .action(function(file) {
     provider = program.provider
 
-    if (program.provider === 'aws') {
-      genesis.addVariable('aws_region', {
-        description: "The AWS region to create things in.",
-        default: "us-east-1"
-      })
+    // TODO: gather resources and terraform them
 
-      genesis.addProvider('aws', {
-        region: "${var.aws_region}"
-      })
 
-      genesis.addProvider('archive', {})
+    // create terraform resources for specified provider
+    terraform_provider(program.provider)
 
-      genesis.addData('aws_iam_policy_document', 'policy', {
-        statement: {
-          sid: "",
-          effect: "Allow",
-
-          principals: {
-            identifiers: ["lambda.amazonaws.com"],
-            type: "Service"
-          },
-
-          actions: ["sts:AssumeRole"]
-        }
-      })
-
-      // Write to provider.tf file
-      fs.writeFile("./" + program.provider + ".tf", genesis.toString(), function(err) {
-          if (err) {
-            return console.log(err)
-          }
-          console.log("AWS Terraform File Saved")
-      });
-    }
-
-    // TODO: call terraform apply from here
-    // call terraform apply behind the scenes
-    // let execCallback = (error, stdout, stderr) => {
-    //     if (error) console.log("exec error: " + error);
-    //     if (stdout) console.log("Result: " + stdout);
-    //     if (stderr) console.log("shell error: " + stderr);
-    //   };
+    // TODO call terraform plan apply behind the scenes
+    let execCallback = (error, stdout, stderr) => {
+      if (error) console.log("exec error: " + error);
+      if (stdout) console.log("Result: " + stdout);
+      if (stderr) console.log("shell error: " + stderr);
+    };
     // exec('terraform apply', execCallback)
+    console.log("aay")
+
   })
   .parse(process.argv);
+
+
+function terraform_provider(provider) {
+  if (provider === 'aws') {
+    genesis.addVariable('aws_region', {
+      description: "The AWS region to create things in.",
+      default: "us-east-1"
+    })
+
+    genesis.addProvider('aws', {
+      region: "${var.aws_region}"
+    })
+
+    genesis.addProvider('archive', {})
+
+    genesis.addData('aws_iam_policy_document', 'policy', {
+      statement: {
+        sid: "",
+        effect: "Allow",
+
+        principals: {
+          identifiers: ["lambda.amazonaws.com"],
+          type: "Service"
+        },
+
+        actions: ["sts:AssumeRole"]
+      }
+    })
+
+    // Write to provider.tf file
+    fs.writeFile("./" + program.provider + ".tf", genesis.toString(), function(err) {
+        if (err) {
+          return console.log(err)
+        }
+        console.log("AWS Terraform File Saved")
+    });
+  }
+}

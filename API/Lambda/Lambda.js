@@ -54,12 +54,12 @@ class Lambda {
       handler: this.name + '.handler',
       runtime: this.runtime,
 
-      filename: "${data.archive_file.zip.output_path}",
-      source_code_hash: "${data.archive_file.zip.output_sha}"
+      filename: "${data.archive_file." + this.name + "_zip.output_path}",
+      source_code_hash: "${data.archive_file." + this.name + "_zip.output_sha}"
     })
 
     // add zip
-    genesis.addData('archive_file', 'zip', {
+    genesis.addData('archive_file', this.name + '_zip', {
       type: 'zip',
       source_file: this.name + '.js',
       output_path: this.name + '.zip'
@@ -93,69 +93,34 @@ class Lambda {
     if (this.http) {
       // TODO: this should be in AWS.tf
       // Don't want to create a new one for each lambda
-      // Configure root REST API object
+
       // The "REST API" is the container for all of the other API Gateway objects
-      genesis.addResource('aws_api_gateway_rest_api', 'api_gateway', {
-        name: "AWS_API_Gateway",
-        description: "AWS API Gateway"
-      })
-      /////
+      try {
+          genesis.addResource('aws_api_gateway_rest_api', 'api_gateway', {
+          name: "AWS_API_Gateway",
+          description: "AWS API Gateway"
+        })
+      } catch (error) {
+        console.log(error)
+      }
+
+      // Gateway Resource
       genesis.addResource('aws_api_gateway_resource', this.name, {
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
         parent_id: "${aws_api_gateway_rest_api.api_gateway.root_resource_id}",
-        path_part: this.name + '.' + this.http.path
+        path_part: this.http.path
       })
 
+      // Gateway Method
       genesis.addResource('aws_api_gateway_method', this.name, {
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
         resource_id: "${aws_api_gateway_resource." + this.name + ".id}",
         http_method: "GET",
         authorization: "NONE"
       })
-      ///////
 
-      genesis.addResource('aws_api_gateway_resource', 'proxy', {
-        rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-        parent_id: "${aws_api_gateway_rest_api.api_gateway.root_resource_id}",
-        path_part: "{proxy+}"
-      })
-
-      genesis.addResource('aws_api_gateway_method', 'proxy', {
-        rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-        resource_id: "${aws_api_gateway_resource.proxy.id}",
-        http_method: "ANY",
-        authorization: "NONE"
-      })
-
-      // Specify where incoming requests are routed
+      // Gateway Integration
       genesis.addResource('aws_api_gateway_integration', this.name, {
-        rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-        resource_id: "${aws_api_gateway_method.proxy.resource_id}",
-        http_method: "${aws_api_gateway_method.proxy.http_method}",
-
-        integration_http_method: "POST",
-        type: "AWS_PROXY",
-        uri: "${aws_lambda_function." + this.name + ".invoke_arn}"
-      })
-
-      // genesis.addResource('aws_api_gateway_method', 'proxy_root', {
-      //   rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-      //   resource_id: "${aws_api_gateway_rest_api.api_gateway.root_resource_id}",
-      //   http_method: "ANY",
-      //   authorization: "NONE"
-      // })
-      //
-      // genesis.addResource('aws_api_gateway_integration', 'lambda_root', {
-      //   rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-      //   resource_id: "${aws_api_gateway_method.proxy_root.resource_id}",
-      //   http_method: "${aws_api_gateway_method.proxy_root.http_method}",
-      //
-      //   integration_http_method: "POST",
-      //   type: "AWS_PROXY",
-      //   uri: "${aws_lambda_function." + this.name + ".invoke_arn}"
-      // })
-
-      genesis.addResource('aws_api_gateway_integration', 'lambda_root', {
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
         resource_id: "${aws_api_gateway_method." + this.name + ".resource_id}",
         http_method: "${aws_api_gateway_method." + this.name + ".http_method}",
@@ -165,20 +130,19 @@ class Lambda {
         uri: "${aws_lambda_function." + this.name + ".invoke_arn}"
       })
 
-
-      // Create an api deployment to activate config and expose api
-      genesis.addResource('aws_api_gateway_deployment', 'aws_api_gateway_deployment', {
+      // Gateway Deployment
+      genesis.addResource('aws_api_gateway_deployment', this.name + '_aws_api_gateway_deployment', {
         depends_on: [
           "aws_api_gateway_integration." + this.name,
-          "aws_api_gateway_integration.lambda_root",
         ],
 
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
         stage_name: "hello"
       })
 
-      // give permission to call lambda
-      genesis.addResource('aws_lambda_permission', 'apigw', {
+
+      // Give permission to call lambda
+      genesis.addResource('aws_lambda_permission', this.name + '_apigw', {
         statement_id: "AllowAPIGatewayInvoke",
         action: "lambda:InvokeFunction",
         function_name: "${aws_lambda_function." + this.name + ".arn}",
@@ -186,18 +150,19 @@ class Lambda {
 
         // The /*/* portion grants access from any method on any resource
         // within the API Gateway "REST API".
-        source_arn: "${aws_api_gateway_deployment.aws_api_gateway_deployment.execution_arn}/*/*"
+        source_arn: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.execution_arn}/*/*"
       })
 
-      genesis.addOutput('base_url', {
-        value: "${aws_api_gateway_deployment.aws_api_gateway_deployment.invoke_url}"
-      })
+
     }
 
+    if (this.logs) {
 
+    }
 
     // write genesis.toString() to terraform config template
-    fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {
+    // fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {
+    fs.writeFile("./functions.tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
         }

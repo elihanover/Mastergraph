@@ -14,14 +14,20 @@ var test3 = new weave.Lambda({
       path: 'works'
     }
   },
-  function() {
+  function(event, context, callback) {
     console.log("Test Passed")
+    callback(null, {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+        },
+        body: "<p>Hello world!</p>",
+    })
   }
 )
 
 var test4 = new weave.Lambda({
     name: "thatwould",
-    logs: true,
     http: {
       method: 'get',
       path: 'becool'

@@ -35,3 +35,23 @@ var test2 = new weave.Lambda({
 // TODO: avoid needing to specify filename
 test.terraform(__filename.replace(__dirname+'/',''))
 test2.terraform(__filename.replace(__dirname+'/',''))
+
+
+// var testdeploy = weave.deploy({
+//   name: "test0",
+//   resources: {
+//     "myfunction1": test,
+//     "func2": test2,
+//     "myapi": testAPI,
+//     "accountsdb" : acct_db
+//   }
+// })
+//
+// var testapi = weave.api({
+//   name: "myapi",
+//   paths: {
+//     "accounts/adduser/{username}/{password}": adduser,
+//     "accounts/countusers": countusers,
+//     "statistics/monthlyactiveusers": monthlyactive
+//   }
+// })

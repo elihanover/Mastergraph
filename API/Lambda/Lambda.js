@@ -139,10 +139,29 @@ class Lambda {
         source_arn: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.execution_arn}/*/*"
       })
     }
+    
 
-    if (this.logs) {
+    // Attach policy to role
+    genesis.addResource('aws_iam_role_policy', this.name + '-cloudwatch-log-group', {
+      name: this.name + "-cloudwatch-log-group",
+      role: "${aws_iam_role." + role_id + ".name}",
+      policy: "${data.aws_iam_policy_document." + this.name + "-cloudwatch-log-group-policy.json}"
+    })
 
-    }
+    // Create log stream and write logs
+    genesis.addData('aws_iam_policy_document', this.name + '-cloudwatch-log-group-policy', {
+      statement: {
+        actions: [
+          "logs:*"
+          // "logs:CreateLogGroup",
+          // "logs:CreateLogStream",
+          // "logs:PutLogEvents"
+        ],
+        resources: [
+          "arn:aws:logs:*:*:*",
+        ]
+      }
+    })
 
     // write genesis.toString() to terraform config template
     // fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {

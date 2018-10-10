@@ -1,4 +1,21 @@
 # Weave API
+
+## Version 0 To-Do:
+#### Lambda:
+- api-gateway path parameters
+- api-gateway hierarchical paths
+- logs for lambda
+- infer function handler file more elegantly
+#### DB:
+- uh, everything
+#### General
+- cli deploy elegance
+	- call terraform apply within `weave deploy -p aws`
+	- collect exported resources elegantly
+- package resources into groups?
+	
+
+
 ## Weave a cloud app.
 ### 1. Define and configure resources in code
 ``` node

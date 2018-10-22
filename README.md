@@ -2,12 +2,14 @@
 
 ## Version 0 To-Do:
 #### Lambda:
-- api-gateway path parameters
-- api-gateway hierarchical paths
-- logs for lambda
-- infer function handler file more elegantly
+- api-gateway path parameters (pushing to next version)
+- api-gateway hierarchical paths (pushing to later)
+- logs for lambda (done)
+- infer function handler file more elegantly (syke)
+- Lambda as an object, callable (NEXT)
 #### DB:
-- uh, everything
+- uh, everything (done)
+- DB api (NEXT)
 #### General
 - cli deploy elegance
 	- call terraform apply within `weave deploy -p aws`

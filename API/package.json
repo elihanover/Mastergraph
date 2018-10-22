@@ -16,6 +16,7 @@
     "weave": "Deployment/deploy.js"
   },
   "dependencies": {
+    "aws-sdk": "^2.339.0",
     "commander": "^2.18.0",
     "genesis-device": "^0.1.1"
   }

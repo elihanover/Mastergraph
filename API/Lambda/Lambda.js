@@ -11,14 +11,16 @@ class Lambda {
   // TODO: constructor must take in all the config arguments
   //       and infer other needed information
   constructor(params, func) {
-    console.log(__filename)
-    console.log(__dirname)
+    this.type = "Lambda"
+    // console.log(__filename)
+    // console.log(__dirname)
 
     // User defined
     this.function = func
     this.name = params.name
     this.frequency = params.frequency
     this.http = params.http
+    this.resources = params.resources
 
     // NOTE The eventual .tf config file will be in a config folder so our path will be relative to that
     this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: ELEGANCE
@@ -27,19 +29,8 @@ class Lambda {
 
   // Saves the terraform config for this lambda to a output file
   terraform(filename) {
-    console.log(filename)
+    this.writeLambda() // write lambda to its own file
 
-    // create file called this.name.js with the function in it
-    var function_body = this.function.toString().slice(0,8) + ' handler' + this.function.toString().slice(8) + 'exports.handler = handler'
-    fs.writeFile(this.name + '.js', function_body, (err) => {
-        // throws an error, you could also catch it here
-        if (err) throw err;
-
-        // success case, the file was saved
-        console.log(this.name + '.js updated.');
-    });
-
-    // create role
     const role_id = "iam_for_" + this.name
     genesis.addResource('aws_iam_role', role_id, {
       name: role_id,
@@ -139,7 +130,7 @@ class Lambda {
         source_arn: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.execution_arn}/*/*"
       })
     }
-    
+
 
     // Attach policy to role
     genesis.addResource('aws_iam_role_policy', this.name + '-cloudwatch-log-group', {
@@ -163,14 +154,33 @@ class Lambda {
       }
     })
 
-    // write genesis.toString() to terraform config template
-    // fs.writeFile("./" + this.name + ".tf", genesis.toString(), function(err) {
-    // Name of file should be original file name
     fs.writeFile("./ " + filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
         }
         console.log("The file was saved!")
+    });
+  }
+
+  // write genesis.toString() to terraform config template
+  // Name of file should be original file name
+  writeLambda() {
+    // write resources into function
+    console.log("hi")
+    var header = "const weave = require('weave')\n"
+    for (var i in this.resources) {
+      console.log(this.resources[i])
+      const resource = JSON.stringify(this.resources[i])
+      header += "var " + this.resources[i]["name"] + " = " + "weave." + this.resources[i]['type'] + "(" + resource + ")\n"
+    }
+    // create file called this.name.js with the function in it
+    var function_body = this.function.toString().slice(0,8) + ' handler' + this.function.toString().slice(8) + 'exports.handler = handler'
+    fs.writeFile(this.name + '.js', header + function_body, (err) => {
+        // throws an error, you could also catch it here
+        if (err) throw err;
+
+        // success case, the file was saved
+        console.log(this.name + '.js updated.');
     });
   }
 }

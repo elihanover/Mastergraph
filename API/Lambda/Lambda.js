@@ -4,8 +4,9 @@ var fs = require('fs');
 
 
 /*
-  Lambda(params, function)
-  params =
+    NOTE: current limitations
+      - can't call functions outside of your function
+      - can't call another lambda
 */
 class Lambda {
   // TODO: constructor must take in all the config arguments
@@ -24,7 +25,7 @@ class Lambda {
 
     // NOTE The eventual .tf config file will be in a config folder so our path will be relative to that
     this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: ELEGANCE
-    this.runtime = "nodejs6.10" // TODO: needs to be inferred
+    this.runtime = "nodejs8.10" // TODO: needs to be inferred
   }
 
   // Saves the terraform config for this lambda to a output file
@@ -45,16 +46,37 @@ class Lambda {
       handler: this.name + '.handler',
       runtime: this.runtime,
 
-      filename: "${data.archive_file." + this.name + "_zip.output_path}",
-      source_code_hash: "${data.archive_file." + this.name + "_zip.output_sha}"
+      // filename: "${data.archive_file." + this.name + "_zip.output_path}",
+      // source_code_hash: "${data.archive_file." + this.name + "_zip.output_sha}"
+      filename: this.name + ".zip"
     })
 
+    // create deployment zip for function
+    var archiver = require('archiver');
+    var archive = archiver('zip');
+    var output = fs.createWriteStream(this.name + '.zip');
+    output.on('close', function () {
+      console.log(archive.pointer() + ' total bytes');
+      console.log('archiver has been finalized and the output file descriptor has closed.');
+    });
+
+    archive.on('error', function(err){
+      throw err;
+    });
+
+    archive.pipe(output);
+    archive.glob(this.name + '.js')
+    archive.glob('node_modules/**')
+    archive.finalize();
+
     // add zip
-    genesis.addData('archive_file', this.name + '_zip', {
-      type: 'zip',
-      source_file: this.name + '.js',
-      output_path: this.name + '.zip'
-    })
+    // genesis.addData('archive_file', this.name + '_zip', {
+    //   type: 'zip',
+    //   // source_dir: this.name,
+    //   // source_file: this.name + '.zip',
+    //   output_path: this.name + '.zip',
+    // })
+
 
 
     if (this.frequency) {
@@ -167,14 +189,15 @@ class Lambda {
   writeLambda() {
     // write resources into function
     console.log("hi")
-    var header = "const weave = require('weave')\n"
+    var header = "const weave = require('weaveapi')\n"
     for (var i in this.resources) {
       console.log(this.resources[i])
       const resource = JSON.stringify(this.resources[i])
-      header += "var " + this.resources[i]["name"] + " = " + "weave." + this.resources[i]['type'] + "(" + resource + ")\n"
+      header += "var " + this.resources[i]["name"] + " = " + "new weave." + this.resources[i]['type'] + "(" + resource + ")\n"
     }
     // create file called this.name.js with the function in it
-    var function_body = this.function.toString().slice(0,8) + ' handler' + this.function.toString().slice(8) + 'exports.handler = handler'
+    const n = this.function.toString().indexOf('(')
+    var function_body = this.function.toString().slice(0,n) + ' handler' + this.function.toString().slice(n) + '\nexports.handler = handler'
     fs.writeFile(this.name + '.js', header + function_body, (err) => {
         // throws an error, you could also catch it here
         if (err) throw err;

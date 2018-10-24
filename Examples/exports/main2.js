@@ -1,12 +1,10 @@
+
 // weave checks if resource exists, and if not, deploys it
 const weave = require('../../../WeaveAPI/API')
-// console.log(weave)
-
-
-var db = new weave.Database({
+// const weave = require('weaveapi')
+var databae = new weave.Database({
   name: "databae", // ...needs to be same name as variable right now
-  key: "testkey",
-  key_type: "S"
+  key: "things"
 })
 
 // test function
@@ -36,19 +34,35 @@ var test4 = new weave.Lambda({
       method: 'get',
       path: 'becool'
     },
-    resources: [db] // TODO: render resources onto lambda template
+    resources: [databae]
   },
-  function() {
+  async function() {
     console.log("Hi there")
-    db.put({ // how to get db docclient object?
+    console.log(databae)
+    console.log(databae.put)
+
+    // TODO: AWAIT???
+    await databae.put({ // how to get db docclient object?
       'key': 'hi',
       'value': 'there'
     })
+    // databae.put({ // how to get db docclient object?
+    //   'key': 'hi',
+    //   'value': 'there'
+    // }).promise()
+    console.log("wellhello")
   }
 )
+
+
+
+
+
+
+
 
 // TODO: avoid needing to specify filename
 // console.log(__filename.replace(__dirname+'/',''))
 test3.terraform(__filename.replace(__dirname+'/',''))
 test4.terraform(__filename.replace(__dirname+'/',''))
-db.terraform()
+databae.terraform()

@@ -1,6 +1,6 @@
 {
   "name": "weaveapi",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,7 @@
     "weave": "Deployment/deploy.js"
   },
   "dependencies": {
+    "archiver": "^3.0.0",
     "aws-sdk": "^2.339.0",
     "commander": "^2.18.0",
     "genesis-device": "^0.1.1"

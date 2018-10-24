@@ -8,7 +8,7 @@ class Database {
 
     this.name = params.name
     this.key = params.key
-    this.key_type = params.key_type
+    // this.key_type = params.key_type // ASSUME STRING BC HASH KEY
 
     this.read_cap = params.read_capacity
     this.write_cap = params.write_capacity
@@ -34,7 +34,7 @@ class Database {
     console.log(this.key)
     console.log(this.key_type)
 
-    genesis.addResource('aws_dynamodb_table', 'sample-table', {
+    genesis.addResource('aws_dynamodb_table', 'sample-table', { // TODO: WHY SAMPLE-TABLE??? SHOULD BE this.name
       name: this.name,
       hash_key: this.key,
       write_capacity: this.write_cap,
@@ -42,7 +42,7 @@ class Database {
       $inlines: [
         ['attribute', {
           name: this.key,
-          type: this.key_type
+          type: "S"
         }]
       ]
     })
@@ -60,13 +60,6 @@ class Database {
   ////////////////////
   // GENERAL DB API //
   ////////////////////
-
-
-  // get the tables in the kvdb
-  tables() {
-
-  }
-
   async put(entry) {
     if (this.service === 'aws') {
       params = {}
@@ -74,7 +67,16 @@ class Database {
       params["Items"][this.key] = entry['key']
       params["Items"]["value"] = entry['value']
       try {
-        await this.docClient.put(params).promise()
+        await this.docClient.put(params, function(err, data) {
+          if (err) {
+            console.log("Write Error")
+            console.log(err, err.stack)
+          }
+          else {
+            console.log("Write Success")
+            console.log(data)
+          }
+        }).promise()
       } catch (error) {
         console.log(error)
       }

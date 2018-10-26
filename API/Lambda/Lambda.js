@@ -45,6 +45,8 @@ class Lambda {
       role: "${aws_iam_role." + role_id + ".arn}",
       handler: this.name + '.handler',
       runtime: this.runtime,
+      memory_size: "256",
+      timeout: "10",
 
       // filename: "${data.archive_file." + this.name + "_zip.output_path}",
       // source_code_hash: "${data.archive_file." + this.name + "_zip.output_sha}"
@@ -189,6 +191,11 @@ class Lambda {
       policy_arn: "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
     })
 
+    genesis.addResource('aws_iam_role_policy_attachment', this.name + "_lambda_access", {
+      role: "${aws_iam_role." + role_id + ".name}",
+      policy_arn: "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
+    })
+
     fs.writeFile("./ " + filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
@@ -218,6 +225,28 @@ class Lambda {
         // success case, the file was saved
         console.log(this.name + '.js updated.');
     });
+  }
+
+  ////////////////
+  // Lambda API //
+  ////////////////
+  async trigger(params) {
+    const AWS = require('aws-sdk')
+    var lambda = new AWS.Lambda();
+    console.log('about to invoke')
+    await lambda.invoke({
+      "FunctionName": this.name,
+      "Payload": params
+    }, (err, data) => {
+      if (err) {
+        console.log("lambda error")
+        console.log(err, err.stack)
+      } else {
+        console.log("lambda data")
+        console.log(data)
+      }
+    }).promise()
+    console.log('invoked')
   }
 }
 

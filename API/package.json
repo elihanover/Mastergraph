@@ -1,6 +1,6 @@
 {
   "name": "weaveapi",
-  "version": "1.0.32",
+  "version": "1.0.38",
   "description": "",
   "main": "index.js",
   "scripts": {

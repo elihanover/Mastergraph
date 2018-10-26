@@ -7,28 +7,9 @@ var databae = new weave.Database({
   key: "things"
 })
 
-// test function
-var test3 = new weave.Lambda({
-    name: "hopethis",
-    // frequency: "1 minute",
-    http: {
-      method: 'get',
-      path: 'works'
-    }
-  },
-  function(event, context, callback) {
-    console.log("Test Passed")
-    callback(null, {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-        },
-        body: "<p>Hello world!</p>",
-    })
-  }
-)
 
-var test4 = new weave.Lambda({
+
+var thatwould = new weave.Lambda({
     name: "thatwould",
     http: {
       method: 'get',
@@ -61,6 +42,30 @@ var test4 = new weave.Lambda({
   }
 )
 
+// test function
+var test3 = new weave.Lambda({
+    name: "hopethis",
+    // frequency: "1 minute",
+    http: {
+      method: 'get',
+      path: 'works'
+    },
+    resources: [thatwould]
+  },
+  async function(event, context, callback) {
+    console.log("Test Passed")
+    thatwould.trigger();
+    callback(null, {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+        },
+        body: "<p>Hello world!</p>",
+    })
+    console.log("here")
+  }
+)
+
 
 
 
@@ -71,5 +76,5 @@ var test4 = new weave.Lambda({
 // TODO: avoid needing to specify filename
 // console.log(__filename.replace(__dirname+'/',''))
 test3.terraform(__filename.replace(__dirname+'/',''))
-test4.terraform(__filename.replace(__dirname+'/',''))
+thatwould.terraform(__filename.replace(__dirname+'/',''))
 databae.terraform()

@@ -37,15 +37,22 @@ var test4 = new weave.Lambda({
     resources: [databae]
   },
   async function() {
-    console.log("Hi there")
-    console.log(databae)
+    // const AWS = require('aws-sdk')
+    // var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    // console.log("Hi there")
+    // console.log(databae)
+    // await dynamodb.listTables({}, function(err, data) {
+    //   if (err) console.log(err, err.stack); // an error occurred
+    //   else     console.log(data);           // successful response
+    // }).promise()
     console.log(databae.put)
 
     // TODO: AWAIT???
-    await databae.put({ // how to get db docclient object?
+    let res = await databae.put({ // how to get db docclient object?
       'key': 'hi',
       'value': 'there'
     })
+    console.log("res: " + res)
     // databae.put({ // how to get db docclient object?
     //   'key': 'hi',
     //   'value': 'there'

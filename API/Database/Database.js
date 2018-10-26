@@ -22,10 +22,11 @@ class Database {
 
     // if (this.service === 'aws') {
     const AWS = require('aws-sdk')
-    this.docClient = new AWS.DynamoDB.DocumentClient({
-        region: 'us-east-2',
-        endpoint: 'https://dynamodb.us-east-2.amazonaws.com'
-    })
+    // this.docClient = new AWS.DynamoDB.DocumentClient({
+    //     region: 'us-east-1',
+    //     endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
+    // })
+    this.docClient = new AWS.DynamoDB.DocumentClient()
     // }
   }
 
@@ -61,25 +62,30 @@ class Database {
   // GENERAL DB API //
   ////////////////////
   async put(entry) {
-    if (this.service === 'aws') {
-      params = {}
-      params["TableName"] = this.name
-      params["Items"][this.key] = entry['key']
-      params["Items"]["value"] = entry['value']
-      try {
-        await this.docClient.put(params, function(err, data) {
-          if (err) {
-            console.log("Write Error")
-            console.log(err, err.stack)
-          }
-          else {
-            console.log("Write Success")
-            console.log(data)
-          }
-        }).promise()
-      } catch (error) {
-        console.log(error)
-      }
+    console.log("please just get here")
+    var params = {}
+    params["TableName"] = this.name
+    params["Item"] = {}
+    params["Item"][this.key] = entry['key']
+    params["Item"]["value"] = entry['value']
+    try {
+      console.log("about to make call")
+      console.log("params: " + JSON.stringify(params))
+      let res = await this.docClient.put(params, (err, data) => {
+        if (err) {
+          console.log("error")
+          console.log(JSON.stringify(err))
+          return JSON.stringify(err)
+        }
+        else {
+          console.log("data")
+          console.log(JSON.stringify(data))
+          return JSON.stringify(data)
+        }
+      }).promise()
+    } catch (error) {
+      console.log("error tho")
+      return error
     }
   }
 

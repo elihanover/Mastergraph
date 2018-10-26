@@ -165,15 +165,28 @@ class Lambda {
     genesis.addData('aws_iam_policy_document', this.name + '-cloudwatch-log-group-policy', {
       statement: {
         actions: [
-          "logs:*"
+          "logs:*",
           // "logs:CreateLogGroup",
           // "logs:CreateLogStream",
           // "logs:PutLogEvents"
         ],
         resources: [
-          "arn:aws:logs:*:*:*",
+          "arn:aws:logs:*:*:*"
         ]
       }
+    })
+
+    // genesis.addResource('aws_iam_policy_document', this.name + '_db_access' {
+    //   statement: {
+    //     actions: [
+    //       "dynamodb:*"
+    //     ]
+    //   }
+    // })
+
+    genesis.addResource('aws_iam_role_policy_attachment', this.name + '_db_access', {
+      role: "${aws_iam_role." + role_id + ".name}",
+      policy_arn: "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
     })
 
     fs.writeFile("./ " + filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {

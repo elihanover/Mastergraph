@@ -15,30 +15,15 @@ var thatwould = new weave.Lambda({
       method: 'get',
       path: 'becool'
     },
-    resources: [databae]
+    resources: [databae],
   },
   async function() {
-    // const AWS = require('aws-sdk')
-    // var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    // console.log("Hi there")
-    // console.log(databae)
-    // await dynamodb.listTables({}, function(err, data) {
-    //   if (err) console.log(err, err.stack); // an error occurred
-    //   else     console.log(data);           // successful response
-    // }).promise()
-    console.log(databae.put)
-
-    // TODO: AWAIT???
+    console.log("wellhello")
     let res = await databae.put({ // how to get db docclient object?
       'key': 'hi',
       'value': 'there'
     })
     console.log("res: " + res)
-    // databae.put({ // how to get db docclient object?
-    //   'key': 'hi',
-    //   'value': 'there'
-    // }).promise()
-    console.log("wellhello")
   }
 )
 
@@ -50,7 +35,7 @@ var test3 = new weave.Lambda({
       method: 'get',
       path: 'works'
     },
-    resources: [thatwould]
+    resources: [thatwould],
   },
   async function(event, context, callback) {
     console.log("Test Passed")
@@ -65,16 +50,3 @@ var test3 = new weave.Lambda({
     console.log("here")
   }
 )
-
-
-
-
-
-
-
-
-// TODO: avoid needing to specify filename
-// console.log(__filename.replace(__dirname+'/',''))
-test3.terraform(__filename.replace(__dirname+'/',''))
-thatwould.terraform(__filename.replace(__dirname+'/',''))
-databae.terraform()

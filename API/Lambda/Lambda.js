@@ -2,19 +2,9 @@ const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
 const genesis = new GenesisDevice();
 var fs = require('fs');
 
-
-/*
-    NOTE: current limitations
-      - can't call functions outside of your function
-      - can't call another lambda
-*/
 class Lambda {
-  // TODO: constructor must take in all the config arguments
-  //       and infer other needed information
   constructor(params, func) {
-    this.type = "Lambda"
-    // console.log(__filename)
-    // console.log(__dirname)
+    // this.type = "Lambda"
 
     // User defined
     this.function = func
@@ -22,15 +12,48 @@ class Lambda {
     this.frequency = params.frequency
     this.http = params.http
     this.resources = params.resources
+    this.filename = this._getCallerFile()
 
-    // NOTE The eventual .tf config file will be in a config folder so our path will be relative to that
     this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: ELEGANCE
     this.runtime = "nodejs8.10" // TODO: needs to be inferred
+
+    // call terraform to automagically build tf file???
+    this.provider = 'aws'
+    this.terraform(this.filename)
   }
 
+
+
+  ////////////////
+  // Lambda API //
+  ////////////////
+  async trigger(params) {
+    const AWS = require('aws-sdk')
+    var lambda = new AWS.Lambda();
+    console.log('Invoking: ' + this.name)
+    await lambda.invoke({
+      "FunctionName": this.name,
+      "Payload": params
+    }, (err, data) => {
+      if (err) {
+        console.log("Error invoking function: " + this.name)
+        console.log(err, err.stack)
+      } else {
+        console.log("Function Response Data: ")
+        console.log(JSON.stringify(data))
+      }
+    }).promise()
+    console.log('Invoked: ' + this.name)
+  }
+
+  //////////////////////
+  // Helper Functions //
+  //////////////////////
+
   // Saves the terraform config for this lambda to a output file
+  // This layer of abstraction just decides which provider to call
   terraform(filename) {
-    this.writeLambda() // write lambda to its own file
+    this.writeFunctionToFile() // write lambda to its own file
 
     const role_id = "iam_for_" + this.name
     genesis.addResource('aws_iam_role', role_id, {
@@ -48,8 +71,6 @@ class Lambda {
       memory_size: "256",
       timeout: "10",
 
-      // filename: "${data.archive_file." + this.name + "_zip.output_path}",
-      // source_code_hash: "${data.archive_file." + this.name + "_zip.output_sha}"
       filename: this.name + ".zip"
     })
 
@@ -71,24 +92,13 @@ class Lambda {
     archive.glob('node_modules/**')
     archive.finalize();
 
-    // add zip
-    // genesis.addData('archive_file', this.name + '_zip', {
-    //   type: 'zip',
-    //   // source_dir: this.name,
-    //   // source_file: this.name + '.zip',
-    //   output_path: this.name + '.zip',
-    // })
-
-
-
+    // set up cron job
     if (this.frequency) {
-      // add cron frequency rule with specified frequency
       genesis.addResource('aws_cloudwatch_event_rule', 'frequency', {
         name: 'frequency_of_' + this.name,
         schedule_expression: 'rate(' + this.frequency + ')'
       })
 
-      //
       genesis.addResource('aws_cloudwatch_event_target', this.name + '_frequency', {
         rule: '${aws_cloudwatch_event_rule.frequency.name}',
         target_id: this.name,
@@ -105,6 +115,7 @@ class Lambda {
       })
     }
 
+    // Set up API endpoint
     if (this.http) {
       // Gateway Resource
       genesis.addResource('aws_api_gateway_resource', this.name, {
@@ -168,23 +179,12 @@ class Lambda {
       statement: {
         actions: [
           "logs:*",
-          // "logs:CreateLogGroup",
-          // "logs:CreateLogStream",
-          // "logs:PutLogEvents"
         ],
         resources: [
           "arn:aws:logs:*:*:*"
         ]
       }
     })
-
-    // genesis.addResource('aws_iam_policy_document', this.name + '_db_access' {
-    //   statement: {
-    //     actions: [
-    //       "dynamodb:*"
-    //     ]
-    //   }
-    // })
 
     genesis.addResource('aws_iam_role_policy_attachment', this.name + '_db_access', {
       role: "${aws_iam_role." + role_id + ".name}",
@@ -206,9 +206,8 @@ class Lambda {
 
   // write genesis.toString() to terraform config template
   // Name of file should be original file name
-  writeLambda() {
+  writeFunctionToFile() {
     // write resources into function
-    console.log("hi")
     var header = "const weave = require('weaveapi')\n"
     for (var i in this.resources) {
       console.log(this.resources[i])
@@ -227,26 +226,28 @@ class Lambda {
     });
   }
 
-  ////////////////
-  // Lambda API //
-  ////////////////
-  async trigger(params) {
-    const AWS = require('aws-sdk')
-    var lambda = new AWS.Lambda();
-    console.log('about to invoke')
-    await lambda.invoke({
-      "FunctionName": this.name,
-      "Payload": params
-    }, (err, data) => {
-      if (err) {
-        console.log("lambda error")
-        console.log(err, err.stack)
-      } else {
-        console.log("lambda data")
-        console.log(data)
-      }
-    }).promise()
-    console.log('invoked')
+  _getCallerFile() {
+    var originalFunc = Error.prepareStackTrace;
+
+    var callerfile;
+    try {
+        var err = new Error();
+        var currentfile;
+
+        Error.prepareStackTrace = function (err, stack) { return stack; };
+
+        currentfile = err.stack.shift().getFileName();
+
+        while (err.stack.length) {
+            callerfile = err.stack.shift().getFileName();
+
+            if(currentfile !== callerfile) break;
+        }
+    } catch (e) {}
+
+    Error.prepareStackTrace = originalFunc;
+
+    return callerfile.slice(callerfile.lastIndexOf('/')+1)
   }
 }
 

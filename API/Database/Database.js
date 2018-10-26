@@ -4,11 +4,10 @@ var fs = require('fs');
 
 class Database {
   constructor(params) {
-    this.type = "Database"
+    // this.type = "Database"
 
     this.name = params.name
-    this.key = params.key
-    // this.key_type = params.key_type // ASSUME STRING BC HASH KEY
+    this.key = params.key // NOTE: assuming string because hash_key
 
     this.read_cap = params.read_capacity
     this.write_cap = params.write_capacity
@@ -20,14 +19,10 @@ class Database {
       this.write_cap = 5
     }
 
-    // if (this.service === 'aws') {
     const AWS = require('aws-sdk')
-    // this.docClient = new AWS.DynamoDB.DocumentClient({
-    //     region: 'us-east-1',
-    //     endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
-    // })
     this.docClient = new AWS.DynamoDB.DocumentClient()
-    // }
+
+    this.terraform()
   }
 
 
@@ -69,23 +64,18 @@ class Database {
     params["Item"][this.key] = entry['key']
     params["Item"]["value"] = entry['value']
     try {
-      console.log("about to make call")
-      console.log("params: " + JSON.stringify(params))
+      console.log("Request Parameters: " + JSON.stringify(params))
       let res = await this.docClient.put(params, (err, data) => {
         if (err) {
-          console.log("error")
-          console.log(JSON.stringify(err))
+          console.log(err, err.stack)
           return JSON.stringify(err)
         }
         else {
-          console.log("data")
-          console.log(JSON.stringify(data))
           return JSON.stringify(data)
         }
       }).promise()
     } catch (error) {
-      console.log("error tho")
-      return error
+      console.log(error, error.stack)
     }
   }
 

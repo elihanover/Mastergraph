@@ -1,5 +1,5 @@
-# Weave API
-### API and graphical interface for prototyping, managing, and testing cloud deployments for hackers.
+# Mastergraph API
+### Prototyping, managing, and testing cloud deployments for hackers.
 
 ## Weave a cloud app.
 ### 1. Define and configure resources in code

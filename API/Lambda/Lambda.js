@@ -4,25 +4,21 @@ var fs = require('fs');
 
 class Lambda {
   constructor(params, func) {
-    // this.type = "Lambda"
-
-    // User defined
-    this.function = func
     this.name = params.name
     this.frequency = params.frequency
     this.http = params.http
     this.resources = params.resources
     this.filename = this._getCallerFile()
+    console.log("this.filename: " + this.filename)
+    this.handler = params.handler || params.name
+    this.handler += '.handler'
+    console.log("this.handler: " + this.handler)
+    this.function = func
 
-    this.handler = "../resources" + __filename.replace(__dirname, '').replace('.js', '') + "." + this.name // TODO: ELEGANCE
     this.runtime = "nodejs8.10" // TODO: needs to be inferred
 
-    // call terraform to automagically build tf file???
     this.provider = 'aws'
-    this.terraform(this.filename)
   }
-
-
 
   ////////////////
   // Lambda API //
@@ -52,8 +48,8 @@ class Lambda {
 
   // Saves the terraform config for this lambda to a output file
   // This layer of abstraction just decides which provider to call
-  terraform(filename) {
-    this.writeFunctionToFile() // write lambda to its own file
+  terraform() {
+    if (this.function) this.writeFunctionToFile() // write lambda to its own file
 
     const role_id = "iam_for_" + this.name
     genesis.addResource('aws_iam_role', role_id, {
@@ -66,7 +62,7 @@ class Lambda {
       function_name: this.name,
 
       role: "${aws_iam_role." + role_id + ".arn}",
-      handler: this.name + '.handler',
+      handler: this.handler + '.handler',
       runtime: this.runtime,
       memory_size: "256",
       timeout: "10",
@@ -88,7 +84,7 @@ class Lambda {
     });
 
     archive.pipe(output);
-    archive.glob(this.name + '.js')
+    archive.glob(this.handler)
     archive.glob('node_modules/**')
     archive.finalize();
 
@@ -196,7 +192,8 @@ class Lambda {
       policy_arn: "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
     })
 
-    fs.writeFile("./ " + filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
+    // write genesis.toString() to terraform config template
+    fs.writeFile("./ " + this.filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
         }
@@ -204,8 +201,6 @@ class Lambda {
     });
   }
 
-  // write genesis.toString() to terraform config template
-  // Name of file should be original file name
   writeFunctionToFile() {
     // write resources into function
     var header = "const weave = require('weaveapi')\n"

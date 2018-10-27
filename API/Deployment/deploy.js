@@ -14,26 +14,33 @@ exec = require('child_process').exec;
 spawn = require('child_process').spawn;
 // chalk = require("chalk") // for coloring output
 
+console.log("hey there")
+
 program
+  // .command('deploy')
   .option('-p, --provider <provider>', 'The cloud service provider to deploy to.')
-  .action(function(file) {
-    provider = program.provider
+  .action(async function() {
+    provider = program.provider || 'aws'
 
     // TODO: gather resources and terraform them
-
+    console.log('hiya')
 
     // create terraform resources for specified provider
-    terraform_provider(program.provider)
+    terraform_provider(provider)
 
     // TODO call terraform plan apply behind the scenes
-    let execCallback = (error, stdout, stderr) => {
-      if (error) console.log("exec error: " + error);
-      if (stdout) console.log("Result: " + stdout);
-      if (stderr) console.log("shell error: " + stderr);
-    };
-    // exec('terraform apply', execCallback)
-    console.log("aay")
-
+    // exec('terraform apply', (err, stdout, stderr) => {
+    //   console.log("hi")
+    //   if (err) {
+    //     console.log( `err: ${err}`)
+    //     return;
+    //   }
+    //
+    //   // the *entire* stdout and stderr (buffered)
+    //   console.log(`stdout: ${stdout}`);
+    //   console.log(`stderr: ${stderr}`);
+    // })
+    console.log('ho')
   })
   .parse(process.argv);
 
@@ -73,7 +80,7 @@ function terraform_provider(provider) {
     })
 
     // Write to provider.tf file
-    fs.writeFile("./" + program.provider + ".tf", genesis.toString(), function(err) {
+    fs.writeFile("./" + provider + ".tf", genesis.toString(), function(err) {
         if (err) {
           return console.log(err)
         }

@@ -22,14 +22,11 @@ class Database {
     const AWS = require('aws-sdk')
     this.docClient = new AWS.DynamoDB.DocumentClient()
 
-    this.terraform()
+    // this.terraform()
   }
 
 
   terraform() {
-    console.log(this.key)
-    console.log(this.key_type)
-
     genesis.addResource('aws_dynamodb_table', 'sample-table', { // TODO: WHY SAMPLE-TABLE??? SHOULD BE this.name
       name: this.name,
       hash_key: this.key,
@@ -58,11 +55,13 @@ class Database {
   ////////////////////
   async put(entry) {
     console.log("please just get here")
-    var params = {}
-    params["TableName"] = this.name
-    params["Item"] = {}
-    params["Item"][this.key] = entry['key']
-    params["Item"]["value"] = entry['value']
+    var params = {
+      "TableName": this.name,
+      "Item": {
+        "value": entry["value"]
+      }
+    }
+    params["Item"][this.key] = entry["key"]
     try {
       console.log("Request Parameters: " + JSON.stringify(params))
       let res = await this.docClient.put(params, (err, data) => {

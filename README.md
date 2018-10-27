@@ -1,60 +1,65 @@
-# Weave API
-
-## Version 0 To-Do:
-#### Lambda:
-- api-gateway path parameters (pushing to next version)
-- api-gateway hierarchical paths (pushing to later)
-- logs for lambda (done)
-- infer function handler file more elegantly (syke)
-- Lambda as an object, callable (NEXT)
-#### DB:
-- uh, everything (done)
-- DB api (NEXT)
-#### General
-- cli deploy elegance
-	- call terraform apply within `weave deploy -p aws`
-	- collect exported resources elegantly
-- package resources into groups?
-	
-
+# Mastergraph API
+### Prototyping, managing, and testing cloud deployments for hackers.
 
 ## Weave a cloud app.
 ### 1. Define and configure resources in code
 ``` node
-from weave import Lambda, Database
+const weave = require('weaveapi')
 
-// (1) define key-value db resource
-var db = new Database(type = 'kv', key = "date")
+// Define a k/v database
+var databae = new weave.Database({
+  name: "databae",
+  key: "things"
+})
 
-// (2) define lambda that writes to db
-var enter = new Lambda({
-    http: "get pread",
-	resources: db
+// Lambda function with endpoint: /becool
+var thatwould = new weave.Lambda({
+    name: "thatwould",
+    http: {
+      method: 'get',
+      path: 'becool'
+    },
+    resources: [databae],
   },
-  function(weather, reporter) {
-    db.put({
-      key: "08.31.2018",
-      value: {
-        "weather": weather,
-        "reporter": reporter
-      }
+  async function() {
+    console.log("wellhello")
+    let res = await databae.put({ // how to get db docclient object?
+      'key': 'hi',
+      'value': 'there'
     })
-  })
-
-// (3) define another lambda to read from db
-var pread = new Lambda({
-  frequency: 1, // for cron job
-	resources: db
-},
-  function() {
-    console.log(db.scan())
+    console.log("res: " + res)
   }
 )
+
+// Lambda function with endpoint: /works
+var hopethis = new weave.Lambda({
+    name: "hopethis",
+    // frequency: "1 minute",
+    http: {
+      method: 'get',
+      path: 'works'
+    },
+    resources: [thatwould],
+  },
+  async function(event, context, callback) {
+    console.log("Test Passed")
+    thatwould.trigger();
+    callback(null, {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+        },
+        body: "<p>Hello world!</p>",
+    })
+    console.log("here")
+  }
+)
+
 ```
-### 2. `weave deploy`
+### 2. `weave deploy filename.js`
 ### 3. Yea, that's it.
 
-### Resources
+## Resources
 #### Lambda Functions
 ``` node
 from weave import Lambda
@@ -64,16 +69,15 @@ var test = new Lambda({
     resources: [db, myqueue]  // dependent resources callable within lambda
   },
   function() {                // actual function logic
-    console.log("Test b0iii")
+    console.log("wow, this actually works.")
   }
 )
 ```
 #### (Key-Value) Database
 ``` node
-from weave import Database
-var db = new Database('kv', {                 // specify db type 
-                        hashkey: "date",      // name of hash key
-                        rangekey: "time",     // name of range key 
-                      })
+var my_db = new Database({
+  name: "my_db",
+  key: "username"
+})
 
 ```

@@ -1,20 +1,15 @@
 #!/usr/bin/env node
-const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
-const terraform = require('../config/terraform.js').terraform
-const terraform_provider = require('../config/terraform.js').terraform_provider
-const genesis = new GenesisDevice();
 const program = require('commander');
 const fs = require('fs');
 
 program
-  .action(function(filename) {
-    // read in deployment json from file
+  .action((filename, provider = 'aws', backend = 'terraform') => {
+    // read in deployment json
     const deployment = JSON.parse(fs.readFileSync(filename, 'utf8'));
 
-    // terraform provider config
-    terraform_provider(deployment.provider)
-
-    // terraform each resource
-    deployment.resources.map(terraform)
+    // import necessary config backend
+    backend = require('../backends/' + backend.toLowerCase() + '.js');
+    backend.config_provider(provider)
+    backend.config_resources(deployment.resources)
   })
   .parse(process.argv)

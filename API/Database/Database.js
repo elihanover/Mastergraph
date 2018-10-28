@@ -21,8 +21,6 @@ class Database {
 
     const AWS = require('aws-sdk')
     this.docClient = new AWS.DynamoDB.DocumentClient()
-
-    // this.terraform()
   }
 
 

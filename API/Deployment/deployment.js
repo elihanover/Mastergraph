@@ -1,3 +1,7 @@
+////////////////////
+// IGNORE FOR NOW //
+////////////////////
+
 const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
 const genesis = new GenesisDevice();
 var fs = require('fs');

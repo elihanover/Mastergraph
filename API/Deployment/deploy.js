@@ -1,20 +1,31 @@
 #!/usr/bin/env node
-const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
-const genesis = new GenesisDevice();
-const terraform_provider = require('../config/terraform').terraform_provider
-var fs = require('fs');
-var program = require('commander');
-// chalk = require("chalk") // for coloring output
+const program = require('commander');
+const fs = require('fs');
+
+// Deployment Cases:
+//  1. deploy through JSON (done)
+//  2. deploy through js objects in specified file
+//  3. deploy through deployment object in specified file
 
 program
-  .option('-p, --provider <provider>', 'The cloud service provider to deploy to.')
-  .action(function(filename) {
-    provider = program.provider || 'aws'
+  .action((filename, provider = 'aws', backend = 'terraform') => {
 
-    // TODO: gather resources and terraform them
-    
+    // import necessary config backend
+    backend = require('../backends/' + backend.toLowerCase() + '.js');
+    backend.config_provider(provider)
 
-    // create terraform resources for specified provider
-    terraform_provider(provider)
+    const filetype = filename.substring(filename.lastIndexOf('.')+1)
+    if (filetype === 'json') {
+      // JSON specified deployment
+      const deployment = JSON.parse(fs.readFileSync(filename, 'utf8'));
+      backend.config_resources(deployment.resources)
+    }
+    else if (filetype === 'js') {
+      // js object specified deployment
+      const resources = require(filename)
+      resource.map((rsc) => {
+        rsc.terraform()
+      })
+    }
   })
-  .parse(process.argv);
+  .parse(process.argv)

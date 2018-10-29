@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const Lambda = require('./Lambda/Lambda.js')
-const Database = require('./Database/Database.js')
+const Lambda = require('./Resources/Lambda.js')
+const Database = require('./Resources/Database.js')
 const deployLambda = require('./Deployment/deploy.js')
 const deployFromJSON = require('./Deployment/deployFromJSON.js')
 module.exports = {Lambda, Database, deployLambda, deployFromJSON}

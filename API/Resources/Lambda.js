@@ -72,12 +72,11 @@ class Lambda {
     var archiver = require('archiver');
     var archive = archiver('zip');
     var output = fs.createWriteStream(this.name + '.zip');
-    output.on('close', function () {
-      console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
+    output.on('close', () => {
+      console.log(archive.pointer() + ' total bytes in deployment package: ' + this.name);
     });
 
-    archive.on('error', function(err){
+    archive.on('error', (err) => {
       throw err;
     });
 
@@ -137,16 +136,6 @@ class Lambda {
         uri: "${aws_lambda_function." + this.name + ".invoke_arn}"
       })
 
-      // Gateway Deployment
-      genesis.addResource('aws_api_gateway_deployment', this.name + '_aws_api_gateway_deployment', {
-        depends_on: [
-          "aws_api_gateway_integration." + this.name,
-        ],
-
-        rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
-        stage_name: "hello"
-      })
-
       // Give permission to call lambda
       genesis.addResource('aws_lambda_permission', this.name + '_apigw', {
         statement_id: "AllowAPIGatewayInvoke",
@@ -157,6 +146,16 @@ class Lambda {
         // The /*/* portion grants access from any method on any resource
         // within the API Gateway "REST API".
         source_arn: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.execution_arn}/*/*"
+      })
+
+      // Gateway Deployment
+      genesis.addResource('aws_api_gateway_deployment', this.name + '_aws_api_gateway_deployment', {
+        depends_on: [
+          "aws_api_gateway_integration." + this.name,
+        ],
+
+        rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
+        stage_name: "hello"
       })
     }
 
@@ -191,11 +190,10 @@ class Lambda {
     })
 
     // write genesis.toString() to terraform config template
-    fs.writeFile("./ " + this.filename.replace(".js", "") + ".tf", genesis.toString(), function(err) {
-        if (err) {
-          return console.log(err)
-        }
-        console.log("The file was saved!")
+    fs.writeFile("./ " + this.filename.replace(".js", "") + ".tf", genesis.toString(), (err) => {
+      if (err) {
+        return console.log(err)
+      }
     });
   }
 
@@ -203,7 +201,6 @@ class Lambda {
     // write resources into function
     var header = "const weave = require('weaveapi')\n"
     for (var i in this.resources) {
-      console.log(this.resources[i])
       const resource = JSON.stringify(this.resources[i])
       header += "var " + this.resources[i]["name"] + " = " + "new weave." + this.resources[i]['type'] + "(" + resource + ")\n"
     }

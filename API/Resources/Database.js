@@ -26,7 +26,6 @@ class Database {
   // GENERAL DB API //
   ////////////////////
   async put(entry) {
-    console.log("please just get here")
     var params = {
       "TableName": this.name,
       "Item": {
@@ -90,7 +89,6 @@ class Database {
         if (err) {
           return console.log(err)
         }
-        console.log("The file was saved!")
     });
   }
 }

@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 const program = require('commander');
 const fs = require('fs');
+const exec = require('child_process').exec;
+const child = require('child_process').child;
 
 // Deployment Cases:
 //  1. deploy through JSON (done)
 //  2. deploy through js objects in specified file (done)
 //  3. deploy through deployment object in specified file
 program
-  // .command('deploy <filename>')
-  .action((filename, provider = 'aws', backend = 'terraform') => {
+  .action((filename, uh='', provider = 'aws', backend = 'terraform') => {
 
     // import necessary config backend
     backend = require('../backends/' + backend.toLowerCase() + '.js');
@@ -27,5 +28,13 @@ program
         resources[rsc].terraform()
       })
     }
+
+    // exec("echo 'yes' | terraform apply", (error, stdout, stderr) => {
+    //   console.log('stdout: ' + stdout);
+    //     console.log('stderr: ' + stderr);
+    //     if (error !== null) {
+    //          console.log('exec error: ' + error);
+    //     }
+    // })
   })
   .parse(process.argv)

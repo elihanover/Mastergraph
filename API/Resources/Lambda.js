@@ -9,10 +9,8 @@ class Lambda {
     this.http = params.http
     this.resources = params.resources
     this.filename = this._getCallerFile()
-    console.log("this.filename: " + this.filename)
     this.handler = params.handler || params.name
     this.handler += '.handler'
-    console.log("this.handler: " + this.handler)
     this.function = func
 
     this.runtime = "nodejs8.10" // TODO: needs to be inferred

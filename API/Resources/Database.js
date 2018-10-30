@@ -4,8 +4,6 @@ var fs = require('fs');
 
 class Database {
   constructor(params) {
-    // this.type = "Database"
-
     this.name = params.name
     this.key = params.key // NOTE: assuming string because hash_key
 
@@ -22,30 +20,6 @@ class Database {
     const AWS = require('aws-sdk')
     this.docClient = new AWS.DynamoDB.DocumentClient()
   }
-
-
-  terraform() {
-    genesis.addResource('aws_dynamodb_table', 'sample-table', { // TODO: WHY SAMPLE-TABLE??? SHOULD BE this.name
-      name: this.name,
-      hash_key: this.key,
-      write_capacity: this.write_cap,
-      read_capacity: this.read_cap,
-      $inlines: [
-        ['attribute', {
-          name: this.key,
-          type: "S"
-        }]
-      ]
-    })
-
-    fs.writeFile("./ " + this.name + ".tf", genesis.toString(), function(err) {
-        if (err) {
-          return console.log(err)
-        }
-        console.log("The file was saved!")
-    });
-  }
-
 
 
   ////////////////////
@@ -91,6 +65,33 @@ class Database {
     }
 
     return result
+  }
+
+
+  ////////////////////
+  // Config Methods //
+  ////////////////////
+
+  terraform() {
+    genesis.addResource('aws_dynamodb_table', this.name, {
+      name: this.name,
+      hash_key: this.key,
+      write_capacity: this.write_cap,
+      read_capacity: this.read_cap,
+      $inlines: [
+        ['attribute', {
+          name: this.key,
+          type: "S"
+        }]
+      ]
+    })
+
+    fs.writeFile("./ " + this.name + ".tf", genesis.toString(), function(err) {
+        if (err) {
+          return console.log(err)
+        }
+        console.log("The file was saved!")
+    });
   }
 }
 

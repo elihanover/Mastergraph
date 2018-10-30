@@ -2,6 +2,8 @@ const Database = require('../Resources/Database.js')
 const Lambda = require('../Resources/Lambda.js')
 const GenesisDevice = require('genesis-device'); // takes JS and turns into .tf
 const genesis = new GenesisDevice();
+const fs = require('fs');
+
 
 class Terraform {
   // Create terraform file based on resource type

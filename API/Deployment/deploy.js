@@ -4,10 +4,10 @@ const fs = require('fs');
 
 // Deployment Cases:
 //  1. deploy through JSON (done)
-//  2. deploy through js objects in specified file
+//  2. deploy through js objects in specified file (done)
 //  3. deploy through deployment object in specified file
-
 program
+  // .command('deploy <filename>')
   .action((filename, provider = 'aws', backend = 'terraform') => {
 
     // import necessary config backend
@@ -22,9 +22,9 @@ program
     }
     else if (filetype === 'js') {
       // js object specified deployment
-      const resources = require(filename)
-      resource.map((rsc) => {
-        rsc.terraform()
+      const resources = require(process.cwd() + '/' + filename)
+      Object.keys(resources).map((rsc) => {
+        resources[rsc].terraform()
       })
     }
   })

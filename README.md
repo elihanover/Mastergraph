@@ -46,9 +46,9 @@ var my_lambda = new weave.Lambda({
           "method": "get",
           "path": "pathtome"
         },
-        "handler": "test.js" // point to file that specifies handler function
+        "handler": "test.js"
       },
-      "resources": ["databae"] // list dependent resources
+      "resources": ["databae"]
     },
     {
       "type": "database",
@@ -62,7 +62,7 @@ var my_lambda = new weave.Lambda({
 ```
 
 ## Resources
-#### Lambda Functions
+### Lambda Functions
 ``` node
 from weave import Lambda
 var lambda = new weave.Lambda({
@@ -75,7 +75,7 @@ var lambda = new weave.Lambda({
   }
 )
 ```
-#### (Key-Value) Database
+### (Key-Value) Database
 ``` node
 from weave import Database
 var my_db = new Database({

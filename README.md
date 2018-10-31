@@ -1,5 +1,5 @@
 # Mastergraph API
-## *Prototyping, managing, and testing cloud deployments for hackers*.
+## *Visual prototyping and management of cloud applications*.
 ### *Mastergraph allows you to define platform agnostic cloud deployments with our intuitive UI, simplified API, or JSON.*
 
 ## Weave a cloud app using JS objects.
@@ -7,23 +7,23 @@
 ``` node
 const weave = require('weaveapi')
 
-// Specify a k/v database
-var databae = new weave.Database({
-  name: "databae",
-  key: "things"
+// Specify a key/value database
+var database = new weave.Database({
+  name: "database",
+  key: "users"
 })
 
-// Lambda function with endpoint: /howisthispossible
-var my_lambda = new weave.Lambda({
-    name: "thatwould",
+// Lambda function with endpoint: /users/get/{user_id}
+var getUser = new weave.Lambda({
+    name: "getUser",
     http: {
       method: 'get',
-      path: 'howisthispossible'
+      path: 'users/get/{user_id}'
     },
-    resources: [databae],
+    resources: [database],
   },
   async function() {
-    let res = await databae.put({
+    let response = await database.put({
       'key': 'hi',
       'value': 'there' // value can be any dict
     })
@@ -41,20 +41,20 @@ var my_lambda = new weave.Lambda({
     {
       "type": "function",
       "params": {
-        "name": "myfunction",
+        "name": "getStarWarsData",
         "http": {
           "method": "get",
-          "path": "pathtome"
+          "path": "/data/starwars"
         },
-        "handler": "test.js"
+        "handler": "rebelDataHandler.js"
       },
-      "resources": ["databae"]
+      "resources": ["database"]
     },
     {
       "type": "database",
       "params": {
-        "name": "mydb",
-        "key": "ssn"
+        "name": "starWarsDB",
+        "key": "db_id"
       }
     }
   ]
@@ -72,7 +72,7 @@ var lambda = new weave.Lambda({
     resources: [db, myqueue]  // dependent resources callable within lambda
   },
   function() {                // actual function logic
-    console.log("wow, this actually works.")
+    console.log("Wow, this actually works.")
   }
 )
 ```

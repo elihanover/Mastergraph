@@ -1,69 +1,71 @@
 # Mastergraph API
-### Prototyping, managing, and testing cloud deployments for hackers.
+## *Prototyping, managing, and testing cloud deployments for hackers*.
+### *Mastergraph allows you to define platform agnostic cloud deployments with our intuitive UI, simplified API, or JSON.*
 
-## Weave a cloud app.
+## Weave a cloud app using JS objects.
 ### 1. Define and configure resources in code
 ``` node
 const weave = require('weaveapi')
 
-// Define a k/v database
+// Specify a k/v database
 var databae = new weave.Database({
   name: "databae",
   key: "things"
 })
 
-// Lambda function with endpoint: /becool
-var thatwould = new weave.Lambda({
+// Lambda function with endpoint: /howisthispossible
+var my_lambda = new weave.Lambda({
     name: "thatwould",
     http: {
       method: 'get',
-      path: 'becool'
+      path: 'howisthispossible'
     },
     resources: [databae],
   },
   async function() {
-    console.log("wellhello")
-    let res = await databae.put({ // how to get db docclient object?
+    let res = await databae.put({
       'key': 'hi',
-      'value': 'there'
+      'value': 'there' // value can be any dict
     })
-    console.log("res: " + res)
-  }
-)
-
-// Lambda function with endpoint: /works
-var hopethis = new weave.Lambda({
-    name: "hopethis",
-    // frequency: "1 minute",
-    http: {
-      method: 'get',
-      path: 'works'
-    },
-    resources: [thatwould],
-  },
-  async function(event, context, callback) {
-    console.log("Test Passed")
-    thatwould.trigger();
-    callback(null, {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-        },
-        body: "<p>Hello world!</p>",
-    })
-    console.log("here")
+    console.log("result: " + res)
   }
 )
 
 ```
-### 2. `weave deploy filename.js`
-### 3. Yea, that's it.
+### 2. `weave filename.js`
+
+## Weave a cloud app using a JSON file.
+``` json
+{
+  "resources": [
+    {
+      "type": "function",
+      "params": {
+        "name": "myfunction",
+        "http": {
+          "method": "get",
+          "path": "pathtome"
+        },
+        "handler": "test.js" // point to file that specifies handler function
+      },
+      "resources": ["databae"] // list dependent resources
+    },
+    {
+      "type": "database",
+      "params": {
+        "name": "mydb",
+        "key": "ssn"
+      }
+    }
+  ]
+}
+```
 
 ## Resources
 #### Lambda Functions
 ``` node
 from weave import Lambda
-var test = new Lambda({
+var lambda = new weave.Lambda({
     http: "get test",         // http request path
     frequency: "1m",          // cron job frequency
     resources: [db, myqueue]  // dependent resources callable within lambda
@@ -75,9 +77,9 @@ var test = new Lambda({
 ```
 #### (Key-Value) Database
 ``` node
+from weave import Database
 var my_db = new Database({
   name: "my_db",
   key: "username"
 })
-
 ```

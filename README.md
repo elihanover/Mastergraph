@@ -41,10 +41,10 @@ var getUser = new weave.Lambda({
     {
       "type": "function",
       "params": {
-        "name": "getStarWarsData",
+        "name": "useTheForce",
         "http": {
           "method": "get",
-          "path": "/data/starwars"
+          "path": "/padawans/luke"
         },
         "handler": "rebelDataHandler.js"
       },
@@ -53,8 +53,8 @@ var getUser = new weave.Lambda({
     {
       "type": "database",
       "params": {
-        "name": "starWarsDB",
-        "key": "db_id"
+        "name": "jedi",
+        "key": "mitochlorians"
       }
     }
   ]

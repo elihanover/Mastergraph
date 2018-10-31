@@ -1,5 +1,5 @@
 # Mastergraph API
-## *Visual prototyping and management of cloud applications*.
+## *Visual prototyping and management of cloud applications for hackers*.
 ### *Mastergraph allows you to define platform agnostic cloud deployments with our intuitive UI, simplified API, or JSON.*
 
 ## Weave a cloud app using JS objects.

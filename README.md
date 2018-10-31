@@ -60,6 +60,7 @@ var my_lambda = new weave.Lambda({
   ]
 }
 ```
+### `weave filename.json`
 
 ## Resources
 ### Lambda Functions

@@ -15,18 +15,21 @@ program
     backend = require('../backends/' + backend.toLowerCase() + '.js');
     backend.config_provider(provider)
 
-    const filetype = filename.substring(filename.lastIndexOf('.')+1)
-    if (filetype === 'json') {
-      // JSON specified deployment
-      const deployment = JSON.parse(fs.readFileSync(filename, 'utf8'));
-      backend.config_resources(deployment.resources)
-    }
-    else if (filetype === 'js') {
-      // js object specified deployment
-      const resources = require(process.cwd() + '/' + filename)
-      Object.keys(resources).map((rsc) => {
-        resources[rsc].terraform()
-      })
+    if (filename.lastIndexOf !== undefined) {
+      console.log(filename)
+      const filetype = filename.substring(filename.lastIndexOf('.')+1)
+      if (filetype === 'json') {
+        // JSON specified deployment
+        const deployment = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        backend.config_resources(deployment.resources)
+      }
+      else if (filetype === 'js') {
+        // js object specified deployment
+        const resources = require(process.cwd() + '/' + filename)
+        Object.keys(resources).map((rsc) => {
+          resources[rsc].terraform()
+        })
+      }
     }
 
     // exec("echo 'yes' | terraform apply", (error, stdout, stderr) => {

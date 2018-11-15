@@ -4,6 +4,7 @@ var fs = require('fs');
 
 class Database {
   constructor(params) {
+    this.type = 'Database'
     this.name = params.name
     this.key = params.key // NOTE: assuming string because hash_key
 

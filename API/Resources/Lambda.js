@@ -4,13 +4,13 @@ var fs = require('fs');
 
 class Lambda {
   constructor(params, func) {
+    this.type = 'Lambda'
     this.name = params.name
     this.frequency = params.frequency
     this.http = params.http
     this.resources = params.resources
     this.filename = this._getCallerFile()
     this.handler = params.handler || params.name
-    this.handler += '.handler'
     this.function = func
 
     this.runtime = "nodejs8.10" // TODO: needs to be inferred
@@ -21,7 +21,10 @@ class Lambda {
   ////////////////
   // Lambda API //
   ////////////////
-  async trigger(params) {
+
+  // Invoke another lambda
+  // [DEPRECATED]: USE SNS TO CHAIN LAMBDAS
+  async invoke(params) {
     const AWS = require('aws-sdk')
     var lambda = new AWS.Lambda();
     console.log('Invoking: ' + this.name)
@@ -38,6 +41,38 @@ class Lambda {
       }
     }).promise()
     console.log('Invoked: ' + this.name)
+  }
+
+  trigger() {
+    const AWS = require('aws-sdk')
+    var sns = new AWS.SNS();
+    sns.listTopics({}, (err, data) => {
+      if (err) console.log(err, err.stack)
+      else {
+        for (var i in data['Topics']) {
+          const arn = data['Topics'][i]['TopicArn']
+          if (arn.indexOf(this.name) !== -1) {
+            // Create promise and SNS service object
+            var publishTextPromise = new AWS.SNS({apiVersion: '2010-03-31'}).publish({
+              Message: 'hiiii',
+              TopicArn: arn
+            }).promise();
+
+            // Handle promise's fulfilled/rejected states
+            publishTextPromise.then(data => {
+                console.log("PUBLISHED TO: " + arn)
+                console.log("Message is " + data);
+            }).catch(err => {
+                console.error(err, err.stack);
+            });
+
+            break;
+          }
+        }
+      }
+    })
+
+
   }
 
   //////////////////////
@@ -81,7 +116,7 @@ class Lambda {
     });
 
     archive.pipe(output);
-    archive.glob(this.handler)
+    archive.glob(this.handler + ".js")
     archive.glob('node_modules/**')
     archive.finalize();
 
@@ -159,6 +194,33 @@ class Lambda {
       })
     }
 
+    // Create SNS topic for this function
+    genesis.addResource('aws_sns_topic', this.name, {
+      name: this.name
+    })
+
+    // Subscribe to claimed topics
+    this.resources.filter((value, index, array) => {
+      if (value.type !== undefined) {
+        return value['type'].toLowerCase() === 'lambda'
+      }
+    }).map((value, index, array) => {
+      // Subscribe to this topic
+      genesis.addResource('aws_sns_topic_subscription', this.name, {
+        topic_arn: '${aws_sns_topic.' + this.name + '.arn}',
+        protocol: 'lambda',
+        endpoint: '${aws_lambda_function.' + value['name'] + '.arn}'
+      })
+
+      // Add permission for this topic to invoke
+      genesis.addResource('aws_lambda_permission', this.name + '_SNS', {
+        statement_id: "AllowExecutionFromSNS",
+        action: "lambda:InvokeFunction",
+        function_name: "${aws_lambda_function." + value['name'] + ".arn}",
+        principal: "sns.amazonaws.com",
+        source_arn: "${aws_sns_topic." + this.name + ".arn}"
+      })
+    })
 
     // Attach policy to role
     genesis.addResource('aws_iam_role_policy', this.name + '-cloudwatch-log-group', {

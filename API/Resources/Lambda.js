@@ -260,12 +260,16 @@ class Lambda {
   }
 
   writeFunctionToFile() {
-    // write resources into function
+    // write resource dependencies into function
     var header = "const weave = require('weaveapi')\n"
     for (var i in this.resources) {
       const resource = JSON.stringify(this.resources[i])
       header += "var " + this.resources[i]["name"] + " = " + "new weave." + this.resources[i]['type'] + "(" + resource + ")\n"
     }
+
+    // write its own object into function
+    header += "var " + this.name + " = new weave." + this.type + "(" + JSON.stringify(this) + ")\n"
+
     // create file called this.name.js with the function in it
     const n = this.function.toString().indexOf('(')
     var function_body = this.function.toString().slice(0,n) + ' handler' + this.function.toString().slice(n) + '\nexports.handler = handler'

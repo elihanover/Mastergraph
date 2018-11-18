@@ -67,9 +67,29 @@ class Database {
         }
         console.log("DATA")
         console.log(JSON.stringify(data))
-        return JSON.stringify(data)
+        return JSON.stringify(data) // why does this return null?
       }).promise()
     } catch (error) {
+      console.log(error, error.stack)
+    }
+  }
+
+
+  async delete(key) {
+    try {
+      await this.docClient.delete({
+        TableName: this.name,
+        Key: key
+      }, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        console.log("DATA")
+        console.log(JSON.stringify(data))
+        return JSON.stringify(data)
+      }).promise()
+    } catch(error) {
       console.log(error, error.stack)
     }
   }

@@ -43,6 +43,7 @@ class Lambda {
     console.log('Invoked: ' + this.name)
   }
 
+  // trigger publishes an SNS event whose topic name is the same as this functions name
   trigger() {
     const AWS = require('aws-sdk')
     var sns = new AWS.SNS();
@@ -71,8 +72,6 @@ class Lambda {
         }
       }
     })
-
-
   }
 
   //////////////////////
@@ -200,27 +199,30 @@ class Lambda {
     })
 
     // Subscribe to claimed topics
-    this.resources.filter((value, index, array) => {
-      if (value.type !== undefined) {
-        return value['type'].toLowerCase() === 'lambda'
-      }
-    }).map((value, index, array) => {
-      // Subscribe to this topic
-      genesis.addResource('aws_sns_topic_subscription', this.name, {
-        topic_arn: '${aws_sns_topic.' + this.name + '.arn}',
-        protocol: 'lambda',
-        endpoint: '${aws_lambda_function.' + value['name'] + '.arn}'
-      })
+    if (this.resources) {
+      this.resources.filter((value, index, array) => {
+        if (value.type !== undefined) {
+          return value['type'].toLowerCase() === 'lambda'
+        }
+      }).map((value, index, array) => {
+        // Subscribe to this topic
+        genesis.addResource('aws_sns_topic_subscription', this.name, {
+          topic_arn: '${aws_sns_topic.' + this.name + '.arn}',
+          protocol: 'lambda',
+          endpoint: '${aws_lambda_function.' + value['name'] + '.arn}'
+        })
 
-      // Add permission for this topic to invoke
-      genesis.addResource('aws_lambda_permission', this.name + '_SNS', {
-        statement_id: "AllowExecutionFromSNS",
-        action: "lambda:InvokeFunction",
-        function_name: "${aws_lambda_function." + value['name'] + ".arn}",
-        principal: "sns.amazonaws.com",
-        source_arn: "${aws_sns_topic." + this.name + ".arn}"
+        // Add permission for this topic to invoke
+        genesis.addResource('aws_lambda_permission', this.name + '_SNS', {
+          statement_id: "AllowExecutionFromSNS",
+          action: "lambda:InvokeFunction",
+          function_name: "${aws_lambda_function." + value['name'] + ".arn}",
+          principal: "sns.amazonaws.com",
+          source_arn: "${aws_sns_topic." + this.name + ".arn}"
+        })
       })
-    })
+    }
+
 
     // Attach policy to role
     genesis.addResource('aws_iam_role_policy', this.name + '-cloudwatch-log-group', {

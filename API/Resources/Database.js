@@ -6,7 +6,9 @@ class Database {
   constructor(params) {
     this.type = 'Database'
     this.name = params.name
-    this.key = params.key // NOTE: assuming string because hash_key
+    this.hashkey = params.hashkey // NOTE: assuming string because hash_key
+    this.sortkey = params.sortkey
+    this.attributes = params.attributes
 
     this.read_cap = params.read_capacity
     this.write_cap = params.write_capacity
@@ -29,42 +31,47 @@ class Database {
   async put(entry) {
     var params = {
       "TableName": this.name,
-      "Item": {
-        "value": entry["value"]
-      }
+      "Item": entry
     }
-    params["Item"][this.key] = entry["key"]
     try {
       console.log("Request Parameters: " + JSON.stringify(params))
-      let res = await this.docClient.put(params, (err, data) => {
+      await this.docClient.put(params, (err, data) => {
         if (err) {
           console.log(err, err.stack)
           return JSON.stringify(err)
         }
-        else {
-          return JSON.stringify(data)
-        }
+        return JSON.stringify(data)
       }).promise()
     } catch (error) {
       console.log(error, error.stack)
     }
   }
 
-  async query(entry) {
-    var result = null
-    if (this.service === 'aws') {
-      try {
-        result = await docClient.query({
-          TableName: this.name,
-          KeyConditionExpression: '',
-          ExpressionAttributeValues: {}
-        }).promise()
-      } catch (error) {
-        console.log(error)
+  // Get specified entry using hash (and maybe sort) key
+  /* Key must have format:
+      {
+        'hashkey': _____,
+        'sortkey': _____  // (optional)
       }
+  */
+  async get(key) {
+    try {
+      await this.docClient.get({
+        TableName: this.name,
+        Key: key
+      }, (err, data) => {
+        console.log("HI THERE")
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        console.log("DATA")
+        console.log(JSON.stringify(data))
+        return JSON.stringify(data)
+      }).promise()
+    } catch (error) {
+      console.log(error, error.stack)
     }
-
-    return result
   }
 
 
@@ -72,19 +79,33 @@ class Database {
   // Config Methods //
   ////////////////////
 
+  // terraform compiles database object into terraform config
   terraform() {
-    genesis.addResource('aws_dynamodb_table', this.name, {
+    var table = {
       name: this.name,
-      hash_key: this.key,
+      hash_key: this.hashkey,
       write_capacity: this.write_cap,
       read_capacity: this.read_cap,
       $inlines: [
         ['attribute', {
-          name: this.key,
+          name: this.hashkey,
           type: "S"
         }]
       ]
-    })
+    }
+
+    // if optional sortkey, add to terraform config
+    if (this.sortkey !== undefined) {
+      table.range_key = this.sortkey // add optional sort key
+      table.$inlines.push([
+        'attribute', {
+          name: this.sortkey,
+          type: 'S'
+        }]
+      )
+    }
+
+    genesis.addResource('aws_dynamodb_table', this.name, table)
 
     fs.writeFile("./ " + this.name + ".tf", genesis.toString(), function(err) {
         if (err) {

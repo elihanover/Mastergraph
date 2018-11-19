@@ -28,6 +28,14 @@ class Database {
   ////////////////////
   // GENERAL DB API //
   ////////////////////
+
+  ///////////////////////////////
+  // Assignment / Modification //
+  ///////////////////////////////
+
+  // Put adds the given input to db
+  // Note: This is not an update, but a full replace!
+  // Item can exist but doesn't need to.
   async put(entry) {
     var params = {
       "TableName": this.name,
@@ -36,6 +44,102 @@ class Database {
     try {
       console.log("Request Parameters: " + JSON.stringify(params))
       await this.docClient.put(params, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        return JSON.stringify(data)
+      }).promise()
+    } catch (error) {
+      console.log(error, error.stack)
+    }
+  }
+
+  // Append val to attribute with key.
+  // (I think) Can exist
+  async append(key, attribute, val) {
+    var params = {
+      TableName: this.name,
+      Key: key,
+      UpdateExpression: "SET #list = list_append(#list, :vals)",
+      ExpressionAttributeNames: {'#list': attribute},
+      ExpressionAttributeValues: {':vals': val}
+    }
+    try {
+      console.log("Request Parameters: " + JSON.stringify(params))
+      await.this.docClient.update(params, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        return JSON.stringify(data)
+      }).promise()
+    } catch (error) {
+      console.log(error, error.stack)
+    }
+  }
+
+  // Prepend val to attribute with key.
+  // (I think) Can exist
+  async prepend(key, attribute, val) {
+    var params = {
+      TableName: this.name,
+      Key: key,
+      UpdateExpression: "SET #list = list_append(:vals, #list)",
+      ExpressionAttributeNames: {'#list': attribute},
+      ExpressionAttributeValues: {':vals': val}
+    }
+    try {
+      console.log("Request Parameters: " + JSON.stringify(params))
+      await.this.docClient.update(params, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        return JSON.stringify(data)
+      }).promise()
+    } catch (error) {
+      console.log(error, error.stack)
+    }
+  }
+
+  // Add val to attribute at key
+  // Must exist
+  async add(key, attribute, val) {
+    var params = {
+      TableName: this.name,
+      Key: key,
+      UpdateExpression: "SET #attr = #attr + :val)",
+      ExpressionAttributeNames: {'#attr': attribute},
+      ExpressionAttributeValues: {':val': val}
+    }
+    try {
+      console.log("Request Parameters: " + JSON.stringify(params))
+      await.this.docClient.update(params, (err, data) => {
+        if (err) {
+          console.log(err, err.stack)
+          return JSON.stringify(err)
+        }
+        return JSON.stringify(data)
+      }).promise()
+    } catch (error) {
+      console.log(error, error.stack)
+    }
+  }
+
+  // Multiple val with attribute at key
+  // Must exist
+  async multiply(key, attribute, val) {
+    var params = {
+      TableName: this.name,
+      Key: key,
+      UpdateExpression: "SET #attr = #attr * :val)",
+      ExpressionAttributeNames: {'#attr': attribute},
+      ExpressionAttributeValues: {':val': val}
+    }
+    try {
+      console.log("Request Parameters: " + JSON.stringify(params))
+      await.this.docClient.update(params, (err, data) => {
         if (err) {
           console.log(err, err.stack)
           return JSON.stringify(err)

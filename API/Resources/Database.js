@@ -37,28 +37,26 @@ class Database {
   // Creates that attr if undefined
   async set(key, attribute, val) {
     var params = {
-      TableName: this.name,
       Key: key,
-      UpdateExpression: "SET #attr = list_append(#attr, :val)",
-      ExpressionAttributeNames: {'#attr': attribute},
+      UpdateExpression: "SET " + attribute + " = :val",
       ExpressionAttributeValues: {':val': val}
     }
-    let res = await update(params)
-    console.log(res)
+    let res = await this.update(params)
+    console.log("RES: " + JSON.stringify(res))
     return res
   }
 
   // Append val to list attribute with key.
   // (I think) Can exist
-  async append(key, attribute, val) {
+  async append(key, attribute, val) {           // ADDS TWICE, SO DOES PREPEND???
+    // turn val into array if not an array
+    if (!Array.isArray(val)) val = [val]
     var params = {
-      TableName: this.name,
       Key: key,
-      UpdateExpression: "SET #list = list_append(#list, :vals)",
-      ExpressionAttributeNames: {'#list': attribute},
+      UpdateExpression: "SET " + attribute + " = list_append(" + attribute + ", :vals)",
       ExpressionAttributeValues: {':vals': val}
     }
-    let res = await update(params)
+    let res = await this.update(params)
     console.log(res)
     return res
   }
@@ -66,14 +64,13 @@ class Database {
   // Prepend val to list attribute with key.
   // (I think) Can exist
   async prepend(key, attribute, val) {
+    if (!Array.isArray(val)) val = [val]
     var params = {
-      TableName: this.name,
       Key: key,
-      UpdateExpression: "SET #list = list_append(:vals, #list)",
-      ExpressionAttributeNames: {'#list': attribute},
+      UpdateExpression: "SET " + attribute + " = list_append(:vals, " + attribute + ")",
       ExpressionAttributeValues: {':vals': val}
     }
-    let res = await update(params)
+    let res = await this.update(params)
     console.log(res)
     return res
   }
@@ -82,31 +79,16 @@ class Database {
   // Must exist
   async add(key, attribute, val) {
     var params = {
-      TableName: this.name,
       Key: key,
-      UpdateExpression: "SET #attr = #attr + :val)",
+      UpdateExpression: "SET " + attribute + " = " + attribute + " + :val",
       ExpressionAttributeNames: {'#attr': attribute},
       ExpressionAttributeValues: {':val': val}
     }
-    let res = await update(params)
+    let res = await this.update(params)
     console.log(res)
     return res
   }
 
-  // Multiple val with number attribute at key
-  // Must exist
-  async multiply(key, attribute, val) {
-    var params = {
-      TableName: this.name,
-      Key: key,
-      UpdateExpression: "SET #attr = #attr * :val)",
-      ExpressionAttributeNames: {'#attr': attribute},
-      ExpressionAttributeValues: {':val': val}
-    }
-    let res = await update(params)
-    console.log(res)
-    return res
-  }
 
   //////////////////////////////////
   // AWS C.R.U.D. Helper Function //
@@ -116,6 +98,10 @@ class Database {
   // Note: This is not an update, but a full replace!
   // Item can exist but doesn't need to.
   async put(params) {
+    params = {
+      TableName: this.name,
+      Item: params
+    }
     try {
       console.log("PUT Request Parameters: " + JSON.stringify(params))
       await this.docClient.put(params, (err, data) => {
@@ -131,14 +117,16 @@ class Database {
   }
 
   async update(params) {
+    params.TableName = this.name
     try {
       console.log("UPDATE Request Parameters: " + JSON.stringify(params))
-      await.this.docClient.update(params, (err, data) => {
+      await this.docClient.update(params, (err, data) => {
         if (err) {
           console.log(err, err.stack)
-          return JSON.stringify(err)
+          return err
         }
-        return JSON.stringify(data)
+        console.log(JSON.stringify(data))
+        return data
       }).promise()
     } catch (error) {
       console.log(error, error.stack)
@@ -158,14 +146,12 @@ class Database {
         TableName: this.name,
         Key: key
       }, (err, data) => {
-        console.log("HI THERE")
         if (err) {
           console.log(err, err.stack)
-          return JSON.stringify(err)
+          return err
         }
-        console.log("DATA")
         console.log(JSON.stringify(data))
-        return JSON.stringify(data) // why does this return null?
+        return data // why does this return null?
       }).promise()
     } catch (error) {
       console.log(error, error.stack)
@@ -181,11 +167,10 @@ class Database {
       }, (err, data) => {
         if (err) {
           console.log(err, err.stack)
-          return JSON.stringify(err)
+          return err
         }
-        console.log("DATA")
         console.log(JSON.stringify(data))
-        return JSON.stringify(data)
+        return data
       }).promise()
     } catch(error) {
       console.log(error, error.stack)

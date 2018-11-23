@@ -1,6 +1,6 @@
 {
   "name": "weaveapi",
-  "version": "1.0.38",
+  "version": "1.0.116",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "author": "weaveapi",
   "license": "ISC",
   "bin": {
-    "weave": "Deployment/deploy.js"
+    "mastergraph": "Deployment/deploy.js"
   },
   "dependencies": {
     "archiver": "^3.0.0",

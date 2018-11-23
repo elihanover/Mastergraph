@@ -3,6 +3,8 @@
 # dependencies
 /node_modules
 /Frontend/working-prototype/node_modules
+/API/node_modules
+/Testing/exports/node_modules
 /.pnp
 .pnp.js
 

@@ -44,7 +44,7 @@ var getUser = new weave.Lambda({
 
 
 ## Resources
-### Lambda Functions
+### Serverless Functions
 ``` node
 from weave import Lambda
 var lambda = new weave.Lambda({
@@ -57,7 +57,7 @@ var lambda = new weave.Lambda({
   }
 )
 ```
-### (Key-Value) Database
+### NoSQL Serverless Database
 ``` node
 from weave import Database
 var my_db = new Database({

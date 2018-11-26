@@ -36,14 +36,12 @@ class Database {
   // Set attribute at key to val
   // Creates that attr if undefined
   async set(key, attribute, val) {
-    var params = {
+    return await this.update({
       Key: key,
       UpdateExpression: "SET " + attribute + " = :val",
-      ExpressionAttributeValues: {':val': val}
-    }
-    let res = await this.update(params)
-    console.log("RES: " + JSON.stringify(res))
-    return res
+      ExpressionAttributeValues: {':val': val},
+      ReturnValues: 'UPDATED_NEW'
+    })
   }
 
   // Append val to list attribute with key.
@@ -51,42 +49,36 @@ class Database {
   async append(key, attribute, val) {           // ADDS TWICE, SO DOES PREPEND???
     // turn val into array if not an array
     if (!Array.isArray(val)) val = [val]
-    var params = {
+    return await this.update({
       Key: key,
       UpdateExpression: "SET " + attribute + " = list_append(" + attribute + ", :vals)",
-      ExpressionAttributeValues: {':vals': val}
-    }
-    let res = await this.update(params)
-    console.log(res)
-    return res
+      ExpressionAttributeValues: {':vals': val},
+      ReturnValues: 'UPDATED_NEW'
+    })
   }
 
   // Prepend val to list attribute with key.
   // (I think) Can exist
   async prepend(key, attribute, val) {
     if (!Array.isArray(val)) val = [val]
-    var params = {
+    return await this.update({
       Key: key,
       UpdateExpression: "SET " + attribute + " = list_append(:vals, " + attribute + ")",
-      ExpressionAttributeValues: {':vals': val}
-    }
-    let res = await this.update(params)
-    console.log(res)
-    return res
+      ExpressionAttributeValues: {':vals': val},
+      ReturnValues: 'UPDATED_NEW'
+    })
   }
 
   // Add val to number attribute at key
   // Must exist
   async add(key, attribute, val) {
-    var params = {
+    return await this.update({
       Key: key,
       UpdateExpression: "SET " + attribute + " = " + attribute + " + :val",
       ExpressionAttributeNames: {'#attr': attribute},
-      ExpressionAttributeValues: {':val': val}
-    }
-    let res = await this.update(params)
-    console.log(res)
-    return res
+      ExpressionAttributeValues: {':val': val},
+      ReturnValues: 'UPDATED_NEW'
+    })
   }
 
 
@@ -104,13 +96,7 @@ class Database {
     }
     try {
       console.log("PUT Request Parameters: " + JSON.stringify(params))
-      await this.docClient.put(params, (err, data) => {
-        if (err) {
-          console.log(err, err.stack)
-          return JSON.stringify(err)
-        }
-        return JSON.stringify(data)
-      }).promise()
+      return await this.docClient.put(params).promise()
     } catch (error) {
       console.log(error, error.stack)
     }
@@ -120,14 +106,7 @@ class Database {
     params.TableName = this.name
     try {
       console.log("UPDATE Request Parameters: " + JSON.stringify(params))
-      await this.docClient.update(params, (err, data) => {
-        if (err) {
-          console.log(err, err.stack)
-          return err
-        }
-        console.log(JSON.stringify(data))
-        return data
-      }).promise()
+      return await this.docClient.update(params).promise()
     } catch (error) {
       console.log(error, error.stack)
     }
@@ -142,16 +121,9 @@ class Database {
   */
   async get(key) {
     try {
-      await this.docClient.get({
+      return await this.docClient.get({
         TableName: this.name,
         Key: key
-      }, (err, data) => {
-        if (err) {
-          console.log(err, err.stack)
-          return err
-        }
-        console.log(JSON.stringify(data))
-        return data // why does this return null?
       }).promise()
     } catch (error) {
       console.log(error, error.stack)
@@ -161,16 +133,9 @@ class Database {
 
   async delete(key) {
     try {
-      await this.docClient.delete({
+      return await this.docClient.delete({
         TableName: this.name,
         Key: key
-      }, (err, data) => {
-        if (err) {
-          console.log(err, err.stack)
-          return err
-        }
-        console.log(JSON.stringify(data))
-        return data
       }).promise()
     } catch(error) {
       console.log(error, error.stack)

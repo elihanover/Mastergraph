@@ -2,6 +2,13 @@
 ## *Visual prototyping and management of cloud applications for hackers*.
 ### *Mastergraph allows you to define platform agnostic cloud deployments with our intuitive UI, simplified API, or JSON.*
 
+## Installation
+```
+npm install weaveapi
+```
+
+
+
 ## Weave a cloud app using JS objects.
 ### 1. Define and configure resources in code
 ``` node
@@ -10,7 +17,7 @@ const weave = require('weaveapi')
 // Specify a key/value database
 var database = new weave.Database({
   name: "database",
-  key: "users"
+  hashkey: "user"
 })
 
 // Lambda function with endpoint: /users/get/{user_id}
@@ -18,52 +25,26 @@ var getUser = new weave.Lambda({
     name: "getUser",
     http: {
       method: 'get',
-      path: 'users/get/{user_id}'
+      path: '/userdb/find'
     },
     resources: [database],
   },
   async function() {
-    let response = await database.put({
-      'key': 'hi',
-      'value': 'there' // value can be any dict
+    let response = await database.set({
+      'user': 'me'      
+    }, 'info', {
+          'email': 'me@me.com',
+          'address': '1 Street Road'
     })
-    console.log("result: " + res)
   }
 )
 
 ```
-### 2. `weave filename.js`
+### 2. `mastergraph filename.js`
 
-## Weave a cloud app using a JSON file.
-``` json
-{
-  "resources": [
-    {
-      "type": "function",
-      "params": {
-        "name": "useTheForce",
-        "http": {
-          "method": "get",
-          "path": "/padawans/luke"
-        },
-        "handler": "rebelDataHandler.js"
-      },
-      "resources": ["database"]
-    },
-    {
-      "type": "database",
-      "params": {
-        "name": "jedi",
-        "key": "mitochlorians"
-      }
-    }
-  ]
-}
-```
-### `weave filename.json`
 
 ## Resources
-### Lambda Functions
+### Serverless Functions
 ``` node
 from weave import Lambda
 var lambda = new weave.Lambda({
@@ -76,11 +57,12 @@ var lambda = new weave.Lambda({
   }
 )
 ```
-### (Key-Value) Database
+### NoSQL Serverless Database
 ``` node
 from weave import Database
 var my_db = new Database({
   name: "my_db",
-  key: "username"
+  hashkey: "username"         // hashkey required
+  sortkey: "age"              // sortkey optional
 })
 ```

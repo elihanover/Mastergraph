@@ -9,7 +9,7 @@ class Lambda {
     this.frequency = params.frequency
     this.http = params.http
     this.resources = params.resources
-    this.filename = this._getCallerFile()
+    this.filename = this._getCallerFile() // params.filename || ...
     this.handler = params.handler || params.name
     this.function = func
 
@@ -44,7 +44,8 @@ class Lambda {
   }
 
   // trigger publishes an SNS event whose topic name is the same as this functions name
-  trigger() {
+  trigger(msg) {
+    if (typeof msg !== 'string') msg = JSON.stringify(msg)
     const AWS = require('aws-sdk')
     var sns = new AWS.SNS();
     sns.listTopics({}, (err, data) => {
@@ -55,14 +56,14 @@ class Lambda {
           if (arn.indexOf(this.name) !== -1) {
             // Create promise and SNS service object
             var publishTextPromise = new AWS.SNS({apiVersion: '2010-03-31'}).publish({
-              Message: 'hiiii',
+              Message: msg,
               TopicArn: arn
             }).promise();
 
             // Handle promise's fulfilled/rejected states
             publishTextPromise.then(data => {
                 console.log("PUBLISHED TO: " + arn)
-                console.log("Message is " + data);
+                console.log("Message is " + JSON.stringify(data));
             }).catch(err => {
                 console.error(err, err.stack);
             });
@@ -190,6 +191,10 @@ class Lambda {
 
         rest_api_id: "${aws_api_gateway_rest_api.api_gateway.id}",
         stage_name: "hello"
+      })
+
+      genesis.addOutput(this.name + "_url", {
+          value: "${aws_api_gateway_deployment." + this.name + "_aws_api_gateway_deployment.invoke_url}"
       })
     }
 
